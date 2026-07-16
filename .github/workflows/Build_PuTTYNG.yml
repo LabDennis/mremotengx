@@ -1,0 +1,217 @@
+name: Build PuTTYNG
+
+# Builds the embedded SSH client from upstream PuTTY source.
+#
+# mRemoteNG ships PuTTYNG.exe, a patched PuTTY that accepts -hwndparent and draws no window
+# border so it can be hosted inside a tab. Stock putty.exe is not a substitute. The patches live
+# in mRemoteNG/PuTTYNG's PuTTYNG.ps1, which clones PuTTY's master and never checks out a tag, so
+# what it produces depends on the day it is run. This pins an explicit tag instead.
+#
+# The result is a self-built binary and is NOT signed or endorsed by upstream. Verify the version
+# resource in the job summary before committing it over mRemoteNG/PuTTYNG.exe.
+
+on:
+  workflow_dispatch:
+    inputs:
+      putty_tag:
+        description: 'PuTTY git tag to build (e.g. 0.84)'
+        required: true
+        default: '0.84'
+
+jobs:
+  build-puttyng:
+    runs-on: windows-latest
+
+    steps:
+      - name: (01) Clone PuTTY at the requested tag
+        shell: pwsh
+        run: |
+          git clone https://git.tartarus.org/simon/putty.git putty
+          cd putty
+          git checkout "tags/${{ inputs.putty_tag }}"
+          Write-Host "HEAD is now: $(git describe --tags --always)" -ForegroundColor Green
+
+      # Ported from mRemoteNG/PuTTYNG's PuTTYNG.ps1, with one deliberate change: every anchor is
+      # verified before use and a miss is fatal.
+      #
+      # The original computes $startIndex = IndexOf($anchor) + $anchor.Length + 1 and then checks
+      # `if ($startIndex -ge 0)`. When the anchor is absent IndexOf returns -1, so $startIndex is
+      # still positive and the guard passes, and it edits at a meaningless offset. A patch that
+      # silently misses here would produce a PuTTYNG that pops modal dialogs behind a tab, or one
+      # that ignores -hwndparent and cannot be embedded at all.
+      - name: (02) Apply the mRemoteNG patches
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "${{ inputs.putty_tag }}"
+
+          function Assert-Anchor([string]$Content, [string]$Anchor, [string]$File) {
+            $count = ([regex]::Matches($Content, [regex]::Escape($Anchor))).Count
+            if ($count -ne 1) {
+              Write-Host "ERROR: expected exactly 1 occurrence of anchor in $File, found $count" -ForegroundColor Red
+              Write-Host "       anchor: $Anchor" -ForegroundColor Red
+              Write-Host "       PuTTY $tag has moved; the patch must be re-checked against this release." -ForegroundColor Red
+              exit 1
+            }
+          }
+
+          function Replace-Block([string]$File, [string]$StartAnchor, [string]$EndAnchor, [string]$NewBlock) {
+            $content = Get-Content -Path $File -Raw
+            Assert-Anchor $content $StartAnchor $File
+            Assert-Anchor $content $EndAnchor $File
+
+            $startIndex = $content.IndexOf($StartAnchor) + $StartAnchor.Length + 1
+            $endIndex = $content.IndexOf($EndAnchor, $startIndex)
+            if ($endIndex -lt $startIndex) {
+              Write-Host "ERROR: end anchor precedes start anchor in $File" -ForegroundColor Red
+              exit 1
+            }
+
+            $modified = $content.Remove($startIndex, $endIndex - $startIndex).Insert($startIndex, $NewBlock)
+            Set-Content -Path $File -Value $modified
+            Write-Host "Patched block in $File" -ForegroundColor Green
+          }
+
+          # --- cmdline.c: accept -hwndparent (embedding) and -auth-plugin ---
+          $workFile = "putty\cmdline.c"
+          $anchor = 'if (!strcmp(p, "-load")) {'
+          Assert-Anchor (Get-Content $workFile -Raw) $anchor $workFile
+          $newContent = '
+          #ifdef PUTTYNG
+              if (!stricmp(p, "-hwndparent")) {
+                  RETURN(2);
+                  hwnd_parent = atoi(value);
+                  return 2;
+              }
+              if (!strcmp(p, "-auth-plugin") || !strcmp(p, "-auth_plugin")) {
+                  RETURN(2);
+                  UNAVAILABLE_IN(TOOLTYPE_NONNETWORK);
+                  SAVEABLE(0);
+                  conf_set_str(conf, CONF_auth_plugin, value);
+                  return 2;
+              }
+          #endif
+
+              if (!strcmp(p, "-load")) {'
+          (Get-Content $workFile).Replace($anchor, $newContent) | Set-Content $workFile
+          Write-Host "Patched $workFile" -ForegroundColor Green
+
+          # --- putty.h: hwnd_parent, and always report maximised so no border is drawn ---
+          $workFile = "putty\putty.h"
+          $anchor = 'extern const char *const appname;'
+          Assert-Anchor (Get-Content $workFile -Raw) $anchor $workFile
+          $newContent = 'extern const char *const appname;
+
+          #ifdef PUTTYNG
+          int hwnd_parent;
+          #define IsZoomed(hWnd) TRUE
+          #endif // PUTTYNG'
+          (Get-Content $workFile).Replace($anchor, $newContent) | Set-Content $workFile
+          Write-Host "Patched $workFile" -ForegroundColor Green
+
+          # --- version.h: stamp the build. A git checkout carries placeholders; the release
+          #     tarball does not, which is why this builds from git rather than the tarball. ---
+          $workFile = "putty\version.h"
+          $content = Get-Content $workFile -Raw
+          Assert-Anchor $content 'Unidentified build' $workFile
+          Assert-Anchor $content '-Unidentified-Local-Build' $workFile
+          Assert-Anchor $content '0,0,0,0' $workFile
+          $setNewVersion = $tag.split(".")[0] + "," + $tag.split(".")[1] + ",0,1"
+          (Get-Content $workFile).Replace('Unidentified build', 'Release ' + $tag + ' mRemoteNG') | Set-Content $workFile
+          (Get-Content $workFile).Replace('-Unidentified-Local-Build', '-Release-mRemoteNG-Build') | Set-Content $workFile
+          (Get-Content $workFile).Replace('0,0,0,0', $setNewVersion) | Set-Content $workFile
+          Write-Host "Patched $workFile -> Release $tag mRemoteNG ($setNewVersion)" -ForegroundColor Green
+
+          # --- window.c: report errors into the terminal instead of a modal MessageBox, which
+          #     would otherwise appear detached from the tab hosting the session ---
+          Replace-Block "putty\windows\window.c" `
+            'char *title = dupprintf("%s Fatal Error", appname);' `
+            'if (conf_get_int(wgs->conf, CONF_close_on_exit) == FORCE_ON)' `
+            '    win_seat_output(seat,true,"\r\n\r\n",4);
+              win_seat_output(seat,0,"------------------- ",20);
+              win_seat_output(seat,0,title,strlen(title));
+              win_seat_output(seat,0," ------------------\r\n",22);
+              win_seat_output(seat,0,"- ",2);
+              win_seat_output(seat,0,msg,strlen(msg));
+              win_seat_output(seat,0,"\r\n\r\n",4);
+              sfree(title);
+
+              '
+
+          Replace-Block "putty\windows\window.c" `
+            'char *title = dupprintf("%s Error", appname);' `
+            'sfree(title);' `
+            '    win_seat_output(seat,true,"\r\n\r\n",4);
+              win_seat_output(seat,0,"------------------- ",20);
+              win_seat_output(seat,0,title,strlen(title));
+              win_seat_output(seat,0," ------------------\r\n",22);
+              win_seat_output(seat,0,"- ",2);
+              win_seat_output(seat,0,msg,strlen(msg));
+              win_seat_output(seat,0,"\r\n\r\n",4);
+              '
+
+      # make22.cmd in the PuTTYNG repo hardcodes Visual Studio 2022 paths and the
+      # "Visual Studio 17 2022" generator. windows-latest is now the VS 2026 image, so that script
+      # cannot run here; cmake is left to pick the newest generator it finds instead.
+      - name: (03) Build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cd putty
+          # PUTTYNG gates the -hwndparent and IsZoomed patches above. Without it the binary builds
+          # but cannot be embedded, which is not something to discover at runtime.
+          cmake -B build -A x64 -DCMAKE_C_FLAGS="/DPUTTYNG"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build build --config Release --target putty
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: (04) Verify and stage the binary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $built = "putty\build\Release\putty.exe"
+          if (-not (Test-Path $built)) {
+            Write-Host "ERROR: putty.exe was not produced" -ForegroundColor Red
+            Get-ChildItem putty\build -Recurse -Filter "*.exe" | Select-Object -ExpandProperty FullName
+            exit 1
+          }
+
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          Copy-Item $built "artifact\PuTTYNG.exe"
+
+          $vi = (Get-Item "artifact\PuTTYNG.exe").VersionInfo
+          $hash = (Get-FileHash "artifact\PuTTYNG.exe" -Algorithm SHA256).Hash
+
+          # mRemoteNG's PuttyTypeDetector keys off InternalName containing "PuTTYNG", and treats a
+          # plain PuTTY differently (it starts it minimised and expects window borders). A binary
+          # that failed this check would be mis-detected at runtime rather than at build time.
+          if ($vi.ProductVersion -notmatch 'mRemoteNG') {
+            Write-Host "ERROR: version resource does not identify an mRemoteNG build: $($vi.ProductVersion)" -ForegroundColor Red
+            exit 1
+          }
+
+          $summary = @"
+          ## PuTTYNG build
+
+          | Field | Value |
+          |---|---|
+          | PuTTY tag | ``${{ inputs.putty_tag }}`` |
+          | FileVersion | ``$($vi.FileVersion)`` |
+          | ProductVersion | ``$($vi.ProductVersion)`` |
+          | InternalName | ``$($vi.InternalName)`` |
+          | SHA256 | ``$hash`` |
+
+          Self-built and unsigned. Replaces ``mRemoteNG/PuTTYNG.exe`` only after review.
+          "@
+          $summary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+          Write-Host "FileVersion:    $($vi.FileVersion)" -ForegroundColor Green
+          Write-Host "ProductVersion: $($vi.ProductVersion)" -ForegroundColor Green
+          Write-Host "SHA256:         $hash" -ForegroundColor Green
+
+      - name: (05) Upload PuTTYNG.exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: PuTTYNG-${{ inputs.putty_tag }}-x64
+          path: artifact/PuTTYNG.exe
+          retention-days: 7
