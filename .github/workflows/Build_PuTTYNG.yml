@@ -55,21 +55,24 @@ jobs:
             }
           }
 
+          # The start anchor must identify one place unambiguously. The end anchor only has to occur
+          # somewhere after it: `sfree(title);` legitimately appears six times in window.c, and the
+          # block ends at the first one following the start.
           function Replace-Block([string]$File, [string]$StartAnchor, [string]$EndAnchor, [string]$NewBlock) {
             $content = Get-Content -Path $File -Raw
             Assert-Anchor $content $StartAnchor $File
-            Assert-Anchor $content $EndAnchor $File
 
             $startIndex = $content.IndexOf($StartAnchor) + $StartAnchor.Length + 1
             $endIndex = $content.IndexOf($EndAnchor, $startIndex)
-            if ($endIndex -lt $startIndex) {
-              Write-Host "ERROR: end anchor precedes start anchor in $File" -ForegroundColor Red
+            if ($endIndex -lt 0) {
+              Write-Host "ERROR: end anchor never occurs after the start anchor in $File" -ForegroundColor Red
+              Write-Host "       end anchor: $EndAnchor" -ForegroundColor Red
               exit 1
             }
 
             $modified = $content.Remove($startIndex, $endIndex - $startIndex).Insert($startIndex, $NewBlock)
             Set-Content -Path $File -Value $modified
-            Write-Host "Patched block in $File" -ForegroundColor Green
+            Write-Host "Patched block in $File (removed $($endIndex - $startIndex) chars)" -ForegroundColor Green
           }
 
           # --- cmdline.c: accept -hwndparent (embedding) and -auth-plugin ---
