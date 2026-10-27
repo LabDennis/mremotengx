@@ -10,29 +10,30 @@ namespace mRemoteNGTests.UI.Forms
     [Apartment(ApartmentState.STA)]
     public class OptionsFormTests : OptionsFormSetupAndTeardown
     {
+        // The options form is embedded in the options window, which closes it on CloseRequested.
         [Test]
-        public void ClickingCloseButtonClosesTheForm()
+        public void ClickingCancelButtonRequestsClose()
         {
-            bool eventFired = false;
-            _optionsForm.FormClosed += (o, e) => eventFired = true;
-            Button cancelButton = _optionsForm.FindControl<Button>("btnCancel");
-            cancelButton.PerformClick();
-            Assert.That(eventFired, Is.True);
+            bool closeRequested = false;
+            _optionsForm.CloseRequested += (o, e) => closeRequested = true;
+            _optionsForm.FindControl<Button>("btnCancel").PerformClick();
+            Assert.That(closeRequested, Is.True);
         }
 
         [Test]
-        public void ClickingOKButtonSetsDialogResult()
+        public void ClickingOKButtonRequestsClose()
         {
-            Button cancelButton = _optionsForm.FindControl<Button>("btnOK");
-            cancelButton.PerformClick();
-            Assert.That(_optionsForm.DialogResult, Is.EqualTo(DialogResult.OK));
+            bool closeRequested = false;
+            _optionsForm.CloseRequested += (o, e) => closeRequested = true;
+            _optionsForm.FindControl<Button>("btnOK").PerformClick();
+            Assert.That(closeRequested, Is.True);
         }
 
         [Test]
         public void ListViewContainsOptionsPages()
         {
             ListViewTester listViewTester = new("lstOptionPages", _optionsForm);
-            Assert.That(listViewTester.Items.Count, Is.EqualTo(12));
+            Assert.That(listViewTester.Items.Count, Is.EqualTo(13));
         }
 
         [Test]
@@ -52,7 +53,7 @@ namespace mRemoteNGTests.UI.Forms
                 Assert.That(optionsPage, Is.Not.Null);
 
                 // Find a checkbox in the options page
-                var checkBoxes = optionsPage.Controls.Find("", true).OfType<CheckBox>().ToList();
+                var checkBoxes = AllControls(optionsPage).OfType<CheckBox>().ToList();
                 
                 if (checkBoxes.Count > 0)
                 {
@@ -66,6 +67,9 @@ namespace mRemoteNGTests.UI.Forms
                 }
             }
         }
+
+        private static System.Collections.Generic.IEnumerable<Control> AllControls(Control parent) =>
+            parent.Controls.Cast<Control>().SelectMany(child => AllControls(child).Prepend(child));
 
         [Test]
         public void MultipleOpenCloseWithoutConnectionsDoesNotFreeze()

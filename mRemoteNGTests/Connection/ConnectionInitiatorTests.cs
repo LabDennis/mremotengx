@@ -13,6 +13,7 @@ namespace mRemoteNGTests.Connection
     {
         private ConnectionInitiator _connectionInitiator;
         private MessageCollector _messageCollector;
+        private const string NoHostnameMessage = "Cannot open connection: No hostname specified!";
 
         [SetUp]
         public void Setup()
@@ -43,9 +44,8 @@ namespace mRemoteNGTests.Connection
             _connectionInitiator.OpenConnection(connectionInfo);
 
             // Assert - poll for message with timeout
-            var foundMessage = WaitForMessage(MessageClass.ErrorMsg, timeoutMs: 1000);
-            Assert.That(foundMessage, Is.Not.Null, "Expected an error message to be added");
-            Assert.That(foundMessage.Text, Is.EqualTo("Cannot open connection: No hostname specified!"));
+            var foundMessage = WaitForMessage(MessageClass.ErrorMsg, NoHostnameMessage, timeoutMs: 1000);
+            Assert.That(foundMessage, Is.Not.Null, "Expected the no-hostname error message to be added");
         }
 
         [Test]
@@ -63,9 +63,8 @@ namespace mRemoteNGTests.Connection
             _connectionInitiator.OpenConnection(connectionInfo);
 
             // Assert - poll for message with timeout
-            var foundMessage = WaitForMessage(MessageClass.ErrorMsg, timeoutMs: 1000);
-            Assert.That(foundMessage, Is.Not.Null, "Expected an error message to be added");
-            Assert.That(foundMessage.Text, Is.EqualTo("Cannot open connection: No hostname specified!"));
+            var foundMessage = WaitForMessage(MessageClass.ErrorMsg, NoHostnameMessage, timeoutMs: 1000);
+            Assert.That(foundMessage, Is.Not.Null, "Expected the no-hostname error message to be added");
         }
 
         [Test]
@@ -97,13 +96,14 @@ namespace mRemoteNGTests.Connection
         /// <summary>
         /// Polls the message collector for a message of the specified class
         /// </summary>
-        private IMessage WaitForMessage(MessageClass messageClass, int timeoutMs = 1000)
+        // OpenConnection is async void, so a previous test's messages can still arrive; match the text too.
+        private IMessage WaitForMessage(MessageClass messageClass, string text, int timeoutMs = 1000)
         {
             var startTime = DateTime.Now;
             while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
             {
                 var message = _messageCollector.Messages
-                    .FirstOrDefault(m => m.Class == messageClass);
+                    .FirstOrDefault(m => m.Class == messageClass && m.Text == text);
                 
                 if (message != null)
                     return message;

@@ -266,7 +266,8 @@ public class AbstractConnectionInfoDataTests
     {
         var wasCalled = false;
         _testAbstractConnectionInfoData.PropertyChanged += (sender, args) => wasCalled = true;
-        _testAbstractConnectionInfoData.Resolution = RDPResolutions.SmartSize;
+        // SmartSize is the default, so set a different value to cause a change.
+        _testAbstractConnectionInfoData.Resolution = RDPResolutions.FitToWindow;
         Assert.That(wasCalled, Is.True);
     }
 

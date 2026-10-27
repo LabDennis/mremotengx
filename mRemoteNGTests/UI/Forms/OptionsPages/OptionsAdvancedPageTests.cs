@@ -23,15 +23,19 @@ namespace mRemoteNGTests.UI.Forms.OptionsPages
         public void AdvancedPageLinkExistsInListView()
         {
             ListViewTester listViewTester = new("lstOptionPages", _optionsForm);
-            Assert.That(listViewTester.Items[10].Text, Does.Match("Advanced"));
+            Assert.That(AdvancedItem(listViewTester), Is.Not.Null);
         }
 
         [Test]
         public void AdvancedIconShownInListView()
         {
             ListViewTester listViewTester = new("lstOptionPages", _optionsForm);
-            Assert.That(listViewTester.Items[10].ImageList, Is.Not.Null);
+            Assert.That(AdvancedItem(listViewTester).ImageList, Is.Not.Null);
         }
+
+        // Looked up by text: the page order changes when pages such as Plugins are added.
+        private static ListViewItem AdvancedItem(ListViewTester listViewTester) =>
+            listViewTester.Items.Cast<ListViewItem>().FirstOrDefault(item => item.Text == mRemoteNG.Resources.Language.Language.Advanced);
 
         [Test]
         public void SelectingAdvancedPageLoadsSettings()
@@ -40,7 +44,7 @@ namespace mRemoteNGTests.UI.Forms.OptionsPages
             listViewTester.Select("Advanced");
             
             CheckBox checkboxTester = _optionsForm.FindControl<CheckBox>("chkAutomaticReconnect");
-            Assert.That(checkboxTester.Text, Is.EqualTo("Automatically try to reconnect when disconnected from server (RDP && ICA only)"));
+            Assert.That(checkboxTester.Text, Is.EqualTo(mRemoteNG.Resources.Language.Language.DisplayReconnectionDialog));
 
             CheckBox showPuttySessionsCheckBox = _optionsForm.FindControl<CheckBox>("chkShowPuttySessionsInTree");
             Assert.That(showPuttySessionsCheckBox.Text, Is.EqualTo("Show PuTTY saved sessions in connection tree"));

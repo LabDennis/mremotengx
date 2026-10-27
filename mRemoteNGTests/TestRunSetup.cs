@@ -13,4 +13,14 @@ public class TestRunSetup
     {
         Application.EnableVisualStyles();
     }
+
+    // Nothing in a test run may wait for a click: exceptions in window messages fail the test
+    // instead of opening the WinForms error dialog, and closing a tab does not ask for confirmation.
+    // The setting is only changed in memory and never saved, so the user's own config is untouched.
+    [OneTimeSetUp]
+    public void NeverBlockOnDialogs()
+    {
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+        mRemoteNG.Properties.Settings.Default.ConfirmCloseConnection = (int)mRemoteNG.Config.ConfirmCloseEnum.Never;
+    }
 }

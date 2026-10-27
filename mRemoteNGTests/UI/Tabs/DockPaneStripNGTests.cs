@@ -437,7 +437,7 @@ namespace mRemoteNGTests.UI.Tabs
             ConnectionTab replacement = connectionWindow.AddConnectionTab(new ConnectionInfo { Name = "Doc2" }, targetPane, targetIndex);
             Application.DoEvents();
 
-            string[] tabOrder = connectionWindow.connDock.DocumentsToArray()
+            string[] tabOrder = connectionWindow.GetDocuments()
                 .Cast<ConnectionTab>()
                 .Select(tab => tab.TabText)
                 .ToArray();
@@ -566,13 +566,11 @@ namespace mRemoteNGTests.UI.Tabs
             Rectangle visualMinimizeButtonRect = DrawHelper.RtlTransform(dockPaneStrip, logicalMinimizeButtonRect);
 
             Point closeButtonCenter = new(visualCloseButtonRect.Left + visualCloseButtonRect.Width / 2, visualCloseButtonRect.Top + visualCloseButtonRect.Height / 2);
-            Cursor.Position = dockPaneStrip.PointToScreen(closeButtonCenter);
             InvokeOnMouseMove(dockPaneStrip, closeButtonCenter);
 
             Assert.That(GetRectangleProperty(dockPaneStrip, "ActiveClose"), Is.EqualTo(visualCloseButtonRect), "Close hover rectangle should use visual RTL coordinates");
 
             Point minimizeButtonCenter = new(visualMinimizeButtonRect.Left + visualMinimizeButtonRect.Width / 2, visualMinimizeButtonRect.Top + visualMinimizeButtonRect.Height / 2);
-            Cursor.Position = dockPaneStrip.PointToScreen(minimizeButtonCenter);
             InvokeOnMouseMove(dockPaneStrip, minimizeButtonCenter);
 
             Assert.That(GetRectangleProperty(dockPaneStrip, "ActiveMinimize"), Is.EqualTo(visualMinimizeButtonRect), "Minimize hover rectangle should use visual RTL coordinates");

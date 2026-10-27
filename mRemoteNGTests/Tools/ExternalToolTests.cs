@@ -36,13 +36,8 @@ namespace mRemoteNGTests.Tools
             );
             setProcessPropertiesMethod?.Invoke(externalTool, new object[] { process, connectionInfo });
 
-            // Assert
-            // The arguments should contain the password with the equals sign
-            // It may be escaped (e.g., Z-3^=Wv99/Aq), but should not be split
-            Assert.That(process.StartInfo.Arguments, Does.Contain("Z-3"));
-            Assert.That(process.StartInfo.Arguments, Does.Contain("Wv99/Aq"));
-            // The equals sign should be present (possibly escaped as ^=)
-            Assert.That(process.StartInfo.Arguments, Does.Match("Z-3.=Wv99/Aq"));
+            // Assert: ArgumentList bypasses the shell, so the password arrives as one unescaped argument
+            Assert.That(process.StartInfo.ArgumentList, Is.EqualTo(new[] { "-u", "testuser", "-p", "Z-3=Wv99/Aq", "-h", "testhost" }));
         }
 
         [Test]
@@ -72,9 +67,20 @@ namespace mRemoteNGTests.Tools
             setProcessPropertiesMethod?.Invoke(externalTool, new object[] { process, connectionInfo });
 
             // Assert
-            // The password should be present in the arguments (possibly escaped)
-            Assert.That(process.StartInfo.Arguments, Does.Contain("P@ss"));
-            Assert.That(process.StartInfo.Arguments, Does.Contain("W0rd"));
+            Assert.That(process.StartInfo.ArgumentList, Is.EqualTo(new[] { "-p", "P@ss=W0rd!" }));
+        }
+
+        [Test]
+        public void PasswordWithSpacesAndShellCharactersStaysOneUnchangedArgument()
+        {
+            var connectionInfo = new ConnectionInfo { Password = "a b&c%d!^\"e", Hostname = "testhost" };
+            var externalTool = new ExternalTool { FileName = "test.exe", Arguments = "-p %PASSWORD% -h %HOSTNAME%" };
+
+            var process = new Process();
+            typeof(ExternalTool).GetMethod("SetProcessProperties", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .Invoke(externalTool, new object[] { process, connectionInfo });
+
+            Assert.That(process.StartInfo.ArgumentList, Is.EqualTo(new[] { "-p", "a b&c%d!^\"e", "-h", "testhost" }));
         }
 
         [Test]
@@ -105,12 +111,8 @@ namespace mRemoteNGTests.Tools
             setProcessPropertiesMethod?.Invoke(externalTool, new object[] { process, connectionInfo });
 
             // Assert
-            var arguments = process.StartInfo.Arguments;
-            Assert.That(arguments, Does.Contain("myhost.com"));
-            Assert.That(arguments, Does.Contain("8080"));
-            Assert.That(arguments, Does.Contain("admin"));
-            Assert.That(arguments, Does.Contain("TestPass"));
-            Assert.That(arguments, Does.Contain("123"));
+            Assert.That(process.StartInfo.ArgumentList,
+                Is.EqualTo(new[] { "--host", "myhost.com", "--port", "8080", "--user", "admin", "--pass", "TestPass=123" }));
         }
 
         [Test]
