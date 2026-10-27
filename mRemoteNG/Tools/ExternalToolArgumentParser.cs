@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 using mRemoteNG.App;
@@ -26,6 +26,21 @@ namespace mRemoteNG.Tools
             return result;
         }
 
+        /// <summary>
+        /// Returns the value that the given connection variable would currently
+        /// resolve to, so that the UI can show users a preview of the variable.
+        /// Returns an empty string when there is no connection or the variable
+        /// is not a known connection variable.
+        /// </summary>
+        public string GetVariablePreview(string variableName)
+        {
+            if (string.IsNullOrEmpty(variableName) || _connectionInfo == null)
+                return string.Empty;
+
+            string token = $"%{variableName}%";
+            string replacement = GetVariableReplacement(variableName, token);
+            return replacement == token ? string.Empty : replacement ?? string.Empty;
+        }
         private List<Replacement> BuildReplacementList(string input, bool escapeForShell)
         {
             int index = 0;
