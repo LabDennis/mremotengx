@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:mRemoteNG.Avalonia.Localization"
+        xmlns:dock="using:mRemoteNG.Avalonia.ViewModels.Docking"
+        xmlns:conv="using:mRemoteNG.Avalonia.Converters"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="mRemoteNG.Avalonia.Views.Sessions.SessionFullScreenWindow"
+        x:DataType="dock:SessionTabViewModel"
+        Title="{Binding DisplayTitle}"
+        Background="{DynamicResource AppBg0Brush}"
+        WindowState="FullScreen"
+        Icon="avares://mRemoteNG.Avalonia/Assets/Icons/mRemoteNG.ico">
+
+    <Window.Styles>
+        <StyleInclude Source="avares://mRemoteNG.Avalonia/Views/Sessions/SessionStyles.axaml"/>
+        <Style Selector="Border#ConnectionBar">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.16" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+    <!-- The bar gets its own row. An embedded remote desktop paints over anything sharing its space, so a
+         bar drawn on top of the session can never be seen or clicked; keeping it above the session fixes that. -->
+    <Grid RowDefinitions="Auto,*">
+        <Border x:Name="ConnectionBar"
+                Grid.Row="0"
+                Classes="elevated"
+                HorizontalAlignment="Stretch"
+                BorderThickness="0,0,0,1"
+                Padding="12,4">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <mi:MaterialIcon Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
+                                 Kind="{Binding Converter={x:Static conv:ConnectionConverters.Icon}}"
+                                 Foreground="{Binding IconBrush}"/>
+                <TextBlock Grid.Column="1" Text="{Binding DisplayTitle}" VerticalAlignment="Center" FontWeight="Medium"
+                           MaxWidth="320" TextTrimming="CharacterEllipsis"/>
+                <Border Grid.Column="2" Classes="dot" Margin="10,0,0,0"
+                        Classes.success="{Binding IsStatusConnected}"
+                        Classes.warning="{Binding IsStatusBusy}"
+                        Classes.danger="{Binding IsStatusError}"
+                        IsVisible="{Binding HasStatusDot}"/>
+                <Button x:Name="ExitButton" Grid.Column="4" Classes="subtle" Padding="8,4">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="FullscreenExit"/>
+                        <TextBlock Text="{l:Tr ExitFullScreen}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                BorderBrush="{Binding FrameBrush}"
+                BorderThickness="{Binding FrameThickness}"
+                Padding="{Binding FramePadding}">
+            <Border x:Name="ViewHost"/>
+        </Border>
+    </Grid>
+</Window>

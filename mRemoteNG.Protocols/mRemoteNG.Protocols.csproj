@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>mRemoteNG.Protocols</RootNamespace>
+    <AssemblyName>mRemoteNG.Protocols</AssemblyName>
+    <Description>mRemoteNG — Cross-platform protocol implementations (SSH, Telnet, RDP, VNC, HTTP)</Description>
+    <Version>1.78.2-dev</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SSH via SSH.NET -->
+    <PackageReference Include="SSH.NET" />
+
+    <!-- Avalonia (visual protocol controls) -->
+    <PackageReference Include="Avalonia" />
+
+    <!-- JPEG decoding for the VNC Tight encoding (the same SkiaSharp Avalonia renders with) -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+
+    <!-- Serial port support -->
+    <PackageReference Include="System.IO.Ports" />
+
+    <!-- DPAPI, so a password can be stored in an .rdp file the way mstsc.exe does (Windows only at runtime). -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+
+    <!-- DI abstractions -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+
+    <!-- Reactive -->
+    <PackageReference Include="ReactiveUI" />
+    <PackageReference Include="System.Reactive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\mRemoteNG.Platform\mRemoteNG.Platform.csproj" />
+    <ProjectReference Include="..\mRemoteNG.Core\mRemoteNG.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="mRemoteNG.Tests.CrossPlatform" />
+    <!-- Hosts the Windows Remote Desktop ActiveX control inside the session tab. -->
+    <InternalsVisibleTo Include="mRemoteNG.Platform.Windows" />
+    <!-- Headless UI tests of the embedded-window focus handling (RdpSessionView) -->
+    <InternalsVisibleTo Include="mRemoteNG.Avalonia.Tests" />
+  </ItemGroup>
+
+</Project>

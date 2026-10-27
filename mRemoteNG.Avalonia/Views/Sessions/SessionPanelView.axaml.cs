@@ -1,0 +1,598 @@
+using System.Collections.Specialized;
+using System.ComponentModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Material.Icons;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using mRemoteNG.Avalonia.ViewModels.Docking;
+using mRemoteNG.Avalonia.Views.Dialogs;
+using mRemoteNG.Core.Localization;
+
+namespace mRemoteNG.Avalonia.Views.Sessions;
+
+/// <summary>
+/// One session panel: its tab strip and the views of its sessions. Every session keeps its
+/// <see cref="SessionContentHost"/> while it is open (only the selected one is visible), so
+/// switching tabs never tears down an embedded view.
+/// </summary>
+public partial class SessionPanelView : UserControl
+{
+    /// <summary>Drag data format of a session tab (the value is the <see cref="SessionTabViewModel"/>).</summary>
+    public const string TabDragFormat = "application/x-mremoteng-session-tab";
+
+    private const double DragThreshold = 5;
+
+    private readonly Dictionary<SessionTabViewModel, SessionContentHost> _hosts = [];
+    private SessionPanelViewModel? _panel;
+    private Point? _pressPoint;
+    private SessionTabViewModel? _pressTab;
+
+    public SessionPanelView()
+    {
+        InitializeComponent();
+        DataContextChanged += (_, _) => Bind(DataContext as SessionPanelViewModel);
+
+        TabStrip.AddHandler(DoubleTappedEvent, OnTabDoubleTapped, RoutingStrategies.Bubble, handledEventsToo: true);
+        TabStrip.AddHandler(PointerReleasedEvent, OnTabPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        TabStrip.AddHandler(PointerPressedEvent, OnTabPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        TabStrip.AddHandler(PointerMovedEvent, OnTabPointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragOverEvent, OnTabDragOver);
+        AddHandler(DragDrop.DragLeaveEvent, (_, _) =>
+        {
+            HideDropIndicator();
+            HideSplitPreview();
+        });
+        AddHandler(DragDrop.DropEvent, OnTabDrop);
+        TabStrip.AddHandler(ContextRequestedEvent, OnTabContextRequested, RoutingStrategies.Bubble);
+        TabStrip.AddHandler(PointerWheelChangedEvent, OnTabStripWheel, RoutingStrategies.Tunnel);
+        AddHandler(PointerPressedEvent, (_, _) => Activate(), RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(GotFocusEvent, (_, _) => Activate(), RoutingStrategies.Bubble, handledEventsToo: true);
+
+        FloatButton.Click += (_, _) =>
+        {
+            if (_panel is not null) _panel.IsFloating = !_panel.IsFloating;
+        };
+        ClosePanelButton.Click += async (_, _) => await ClosePanelAsync();
+        PanelMenuButton.Click += (_, _) =>
+        {
+            if (_panel is null) return;
+            var menu = BuildPanelMenu(_panel, OwnerWindow);
+            menu.Open(PanelMenuButton);
+        };
+        Header.ContextRequested += (_, e) =>
+        {
+            if (_panel is null) return;
+            BuildPanelMenu(_panel, OwnerWindow).Open(Header);
+            e.Handled = true;
+        };
+        OverflowButton.Click += (_, _) => OpenAllTabsMenu();
+        // A narrower strip (panels side by side, a smaller window) keeps the active tab in view.
+        TabScroller.SizeChanged += (_, e) =>
+        {
+            if (Math.Abs(e.NewSize.Width - e.PreviousSize.Width) < 1 || _panel?.ActiveSession is not { } active) return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_panel?.ActiveSession == active)
+                    TabStrip.ScrollIntoView(active);
+            }, DispatcherPriority.Background);
+        };
+        TabStrip.TemplateApplied += (_, e) =>
+        {
+            if (_tabScroller is not null)
+                _tabScroller.ScrollChanged -= OnTabScrollChanged;
+            _tabScroller = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
+            if (_tabScroller is not null)
+                _tabScroller.ScrollChanged += OnTabScrollChanged;
+        };
+    }
+
+    private ScrollViewer? _tabScroller;
+
+    /// <summary>True when the tabs do not all fit and the "all tabs" button is shown.</summary>
+    public bool IsTabStripOverflowing => OverflowButton.IsVisible;
+
+    private void OnTabScrollChanged(object? sender, ScrollChangedEventArgs e) => UpdateOverflow();
+
+    /// <summary>Shows the "all tabs" button and the edge fades when the tabs do not fit.</summary>
+    private void UpdateOverflow()
+    {
+        if (_tabScroller is not { } scroller) return;
+        var hidden = scroller.Extent.Width - scroller.Viewport.Width;
+        var overflowing = hidden > 1;
+        OverflowButton.IsVisible = overflowing;
+        FadeLeft.IsVisible = overflowing && scroller.Offset.X > 1;
+        FadeRight.IsVisible = overflowing && scroller.Offset.X < hidden - 1;
+    }
+
+    /// <summary>The "⌄" menu: every tab of the panel (icon, title, status), the active one checked.</summary>
+    private void OpenAllTabsMenu()
+    {
+        if (_panel is null || _panel.Sessions.Count == 0) return;
+        var items = new List<Control>();
+        foreach (var session in _panel.Sessions)
+        {
+            var icon = new global::Material.Icons.Avalonia.MaterialIcon
+            {
+                Kind = Services.ProtocolVisuals.IconForConnection(session),
+                Foreground = session.IconBrush,
+                Width = 16,
+                Height = 16,
+            };
+            var item = new MenuItem
+            {
+                Header = session.DisplayTitle,
+                Icon = icon,
+                ToggleType = MenuItemToggleType.Radio,
+                IsChecked = ReferenceEquals(session, _panel.ActiveSession),
+            };
+            var target = session;
+            item.Click += (_, _) =>
+            {
+                if (_panel is not null)
+                    _panel.ActiveSession = target;
+            };
+            items.Add(item);
+        }
+        new ContextMenu { ItemsSource = items, Placement = PlacementMode.BottomEdgeAlignedRight }.Open(OverflowButton);
+    }
+
+    public SessionPanelView(SessionPanelViewModel panel) : this() => DataContext = panel;
+
+    public SessionPanelViewModel? Panel => _panel;
+
+    /// <summary>Show the panel's name and actions (float/dock, menu, close). The session area sets it.</summary>
+    public bool ShowHeader
+    {
+        get => Header.IsVisible;
+        set
+        {
+            Header.IsVisible = value;
+            HeaderButtons.IsVisible = value;
+            UpdateVisibility();
+        }
+    }
+
+    /// <summary>The host of each open session (for tests).</summary>
+    public IReadOnlyDictionary<SessionTabViewModel, SessionContentHost> Hosts => _hosts;
+
+    private Window? OwnerWindow => TopLevel.GetTopLevel(this) as Window;
+
+    private void Bind(SessionPanelViewModel? panel)
+    {
+        if (ReferenceEquals(_panel, panel)) return;
+        if (_panel is not null)
+        {
+            _panel.Sessions.CollectionChanged -= OnSessionsChanged;
+            _panel.PropertyChanged -= OnPanelPropertyChanged;
+            foreach (var session in _hosts.Keys.ToList())
+                RemoveHost(session);
+        }
+
+        _panel = panel;
+        if (_panel is null) return;
+        _panel.Sessions.CollectionChanged += OnSessionsChanged;
+        _panel.PropertyChanged += OnPanelPropertyChanged;
+        foreach (var session in _panel.Sessions)
+            AddHost(session);
+        UpdateFloatButton();
+        UpdateVisibility();
+    }
+
+    private void OnSessionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_panel is null) return;
+        // Remove first: a control can only have one parent at a time.
+        foreach (var session in _hosts.Keys.Where(s => !_panel.Sessions.Contains(s)).ToList())
+            RemoveHost(session);
+        foreach (var session in _panel.Sessions.Where(s => !_hosts.ContainsKey(s)))
+            AddHost(session);
+        UpdateVisibility();
+    }
+
+    private void OnPanelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SessionPanelViewModel.ActiveSession))
+        {
+            UpdateVisibility(focus: true);
+            if (_panel?.ActiveSession is { } active)
+                TabStrip.ScrollIntoView(active);
+        }
+        else if (e.PropertyName == nameof(SessionPanelViewModel.IsFloating))
+            UpdateFloatButton();
+    }
+
+    private void AddHost(SessionTabViewModel session)
+    {
+        var host = new SessionContentHost(session) { IsVisible = false };
+        _hosts[session] = host;
+        SessionHost.Children.Add(host);
+    }
+
+    private void RemoveHost(SessionTabViewModel session)
+    {
+        if (!_hosts.Remove(session, out var host)) return;
+        host.Release();
+        SessionHost.Children.Remove(host);
+    }
+
+    private void UpdateVisibility(bool focus = false)
+    {
+        var active = _panel?.ActiveSession;
+        foreach (var (session, host) in _hosts)
+            host.IsVisible = ReferenceEquals(session, active);
+        var empty = _panel is null || _panel.Sessions.Count == 0;
+        EmptyText.IsVisible = empty;
+        TabScroller.IsVisible = !empty;
+        TabBar.IsVisible = !empty || Header.IsVisible;
+        if (empty)
+            OverflowButton.IsVisible = false;
+
+        if (focus && active?.ContentView is { } view && !active.IsDetached)
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (view.IsEffectivelyVisible)
+                    view.Focus();
+            });
+    }
+
+    private void UpdateFloatButton()
+    {
+        if (_panel is null) return;
+        FloatIcon.Kind = _panel.IsFloating ? MaterialIconKind.DockWindow : MaterialIconKind.OpenInNew;
+        ToolTip.SetTip(FloatButton, _panel.IsFloating ? Localizer.Get("DockThisPanelBack") : Localizer.Get("FloatThisPanelInItsOwnWindow"));
+    }
+
+    private void Activate()
+    {
+        if (_panel is not null && _panel.Owner.Panels.Contains(_panel))
+            _panel.Owner.ActivePanel = _panel;
+    }
+
+    private async Task ClosePanelAsync()
+    {
+        if (_panel is null) return;
+        var owner = OwnerWindow;
+        if (_panel.Sessions.Count > 0 && owner is not null
+            && !await MessageDialog.ConfirmAsync(owner, Localizer.Get("ClosePanel"),
+                Localizer.Format("ConfirmClosePanelFormat", _panel.Name, _panel.Sessions.Count),
+                Localizer.Get("_Close"), Localizer.Get("_Cancel")))
+        {
+            return;
+        }
+        await _panel.Owner.ClosePanelAsync(_panel);
+    }
+
+    // ── Tab strip ─────────────────────────────────────────────────────────
+
+    private static SessionTabViewModel? TabFromEvent(RoutedEventArgs e)
+    {
+        for (var visual = e.Source as Visual; visual is not null; visual = visual.GetVisualParent())
+        {
+            if (visual is ListBoxItem { DataContext: SessionTabViewModel tab })
+                return tab;
+            if (visual is ListBox)
+                return null;
+        }
+        return null;
+    }
+
+    private void OnTabDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (e.Source is Visual source && source.FindAncestorOfType<Button>(includeSelf: true) is not null) return;
+        if (TabFromEvent(e) is { } tab && _panel?.Owner.Settings?.DoubleClickOnTabClosesIt != false)
+        {
+            tab.CloseCommand.Execute().Subscribe();
+            e.Handled = true;
+        }
+    }
+
+    private void OnTabStripWheel(object? sender, PointerWheelEventArgs e)
+    {
+        // The wheel scrolls the (horizontal) tab strip.
+        if (TabStrip.Scroll is ScrollViewer scroller && scroller.Extent.Width > scroller.Viewport.Width)
+        {
+            var delta = Math.Abs(e.Delta.X) > Math.Abs(e.Delta.Y) ? e.Delta.X : e.Delta.Y;
+            scroller.Offset = new Vector(Math.Clamp(scroller.Offset.X - delta * 60, 0,
+                scroller.Extent.Width - scroller.Viewport.Width), 0);
+            e.Handled = true;
+        }
+    }
+
+    private void OnTabPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _pressPoint = null;
+        // Middle click closes the tab.
+        if (e.InitialPressMouseButton == MouseButton.Middle && TabFromEvent(e) is { } tab)
+        {
+            tab.CloseCommand.Execute().Subscribe();
+            e.Handled = true;
+        }
+    }
+
+    // ── Tab drag and drop (reorder, move to another panel) ────────────────
+
+    private void OnTabPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(TabStrip);
+        var onButton = e.Source is Visual source && source.FindAncestorOfType<Button>(includeSelf: true) is not null;
+        _pressTab = point.Properties.IsLeftButtonPressed && !onButton ? TabFromEvent(e) : null;
+        _pressPoint = _pressTab is null ? null : point.Position;
+    }
+
+    private async void OnTabPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pressPoint is not { } start || _pressTab is not { } tab) return;
+        if (!e.GetCurrentPoint(TabStrip).Properties.IsLeftButtonPressed)
+        {
+            _pressPoint = null;
+            return;
+        }
+        var delta = e.GetPosition(TabStrip) - start;
+        if (Math.Abs(delta.X) < DragThreshold && Math.Abs(delta.Y) < DragThreshold) return;
+
+        _pressPoint = null;
+        var data = new DataObject();
+        data.Set(TabDragFormat, tab);
+        try
+        {
+            await DragDrop.DoDragDrop(e, data, DragDropEffects.Move);
+        }
+        finally
+        {
+            HideDropIndicator();
+            HideSplitPreview();
+        }
+    }
+
+    /// <summary>The session tab being dragged, when it belongs to <paramref name="dock"/>.</summary>
+    internal static SessionTabViewModel? DraggedTab(DragEventArgs e, SessionsDockable dock) =>
+        e.Data.Get(TabDragFormat) is SessionTabViewModel tab && dock.Sessions.Contains(tab) ? tab : null;
+
+    /// <summary>True while the split or panel drop preview is showing on this panel.</summary>
+    public bool IsSplitPreviewVisible => SplitPreview.IsVisible;
+
+    private void OnTabDragOver(object? sender, DragEventArgs e)
+    {
+        if (_panel is null || DraggedTab(e, _panel.Owner) is not { } tab)
+        {
+            e.DragEffects = DragDropEffects.None;
+            HideDropIndicator();
+            HideSplitPreview();
+            return;
+        }
+
+        if (IsOverTabBar(e))
+        {
+            HideSplitPreview();
+            e.DragEffects = DragDropEffects.Move;
+            ShowDropIndicator(DropIndex(e));
+            e.Handled = true;
+            return;
+        }
+
+        HideDropIndicator();
+        var dock = _panel.Owner;
+        var moveWholePanelToOther = !ReferenceEquals(tab.Panel, _panel)
+            && dock.Arrangement is PanelArrangement.SideBySide or PanelArrangement.Stacked;
+        var splitSide = moveWholePanelToOther ? null : BodyDropSide(e, allowCenterJoin: !ReferenceEquals(tab.Panel, _panel));
+
+        if (!moveWholePanelToOther && splitSide is null && ReferenceEquals(tab.Panel, _panel) && _panel.Sessions.Count <= 1
+            && dock.Panels.Count(p => !p.IsFloating && !ReferenceEquals(p, _panel) && p.Sessions.Count > 0) == 0)
+        {
+            e.DragEffects = DragDropEffects.None;
+            HideSplitPreview();
+            return;
+        }
+
+        e.DragEffects = DragDropEffects.Move;
+        ShowSplitPreview(splitSide);
+        e.Handled = true;
+    }
+
+    private void OnTabDrop(object? sender, DragEventArgs e)
+    {
+        HideDropIndicator();
+        HideSplitPreview();
+        if (_panel is null || DraggedTab(e, _panel.Owner) is not { } tab) return;
+
+        if (IsOverTabBar(e))
+        {
+            _panel.Owner.MoveSession(tab, _panel, DropIndex(e));
+            e.Handled = true;
+            return;
+        }
+
+        var dock = _panel.Owner;
+        var moveWholePanelToOther = !ReferenceEquals(tab.Panel, _panel)
+            && dock.Arrangement is PanelArrangement.SideBySide or PanelArrangement.Stacked;
+        var splitSide = moveWholePanelToOther ? null : BodyDropSide(e, allowCenterJoin: !ReferenceEquals(tab.Panel, _panel));
+
+        if (splitSide is { } side)
+            dock.SplitSession(tab, side, _panel);
+        else if (!ReferenceEquals(tab.Panel, _panel))
+            dock.MoveSession(tab, _panel, _panel.Sessions.Count);
+        e.Handled = true;
+    }
+
+    private bool IsOverTabBar(DragEventArgs e) =>
+        TabBar.IsVisible && e.GetPosition(TabBar) is var bar && bar.Y >= 0 && bar.Y <= TabBar.Bounds.Height;
+
+    /// <summary>
+    /// Determines which edge of the panel body the pointer is over, or null for the centre of another panel
+    /// (joining that panel's tab group without splitting).
+    /// </summary>
+    private SplitSide? BodyDropSide(DragEventArgs e, bool allowCenterJoin)
+    {
+        var width = BodyGrid.Bounds.Width;
+        var height = BodyGrid.Bounds.Height;
+        if (width < 1 || height < 1) return SplitSide.Right;
+        var at = e.GetPosition(BodyGrid);
+        var nx = Math.Clamp(at.X / width, 0, 1);
+        var ny = Math.Clamp(at.Y / height, 0, 1);
+        var dx = Math.Abs(nx - 0.5);
+        var dy = Math.Abs(ny - 0.5);
+        if (allowCenterJoin && dx < 0.25 && dy < 0.25)
+            return null;
+        if (dx >= dy)
+            return nx >= 0.5 ? SplitSide.Right : SplitSide.Left;
+        return ny >= 0.5 ? SplitSide.Bottom : SplitSide.Top;
+    }
+
+    /// <summary>Where a drop goes in the tab bar: before the tab under the pointer's left half, else at the end.</summary>
+    private int DropIndex(DragEventArgs e)
+    {
+        var count = _panel?.Sessions.Count ?? 0;
+        if (!IsOverTabBar(e)) return count;
+        for (var i = 0; i < count; i++)
+        {
+            if (TabStrip.ContainerFromIndex(i) is not Control container) continue;
+            if (e.GetPosition(container).X < container.Bounds.Width / 2)
+                return i;
+        }
+        return count;
+    }
+
+    private void ShowSplitPreview(SplitSide? side)
+    {
+        var width = BodyGrid.Bounds.Width;
+        var height = BodyGrid.Bounds.Height;
+        if (width < 1 || height < 1)
+        {
+            SplitPreview.IsVisible = false;
+            return;
+        }
+        const double inset = 6;
+        double left = inset, top = inset, right = inset, bottom = inset;
+        switch (side)
+        {
+            case SplitSide.Left:
+                right = width / 2 + inset;
+                break;
+            case SplitSide.Right:
+                left = width / 2 + inset;
+                break;
+            case SplitSide.Top:
+                bottom = height / 2 + inset;
+                break;
+            case SplitSide.Bottom:
+                top = height / 2 + inset;
+                break;
+        }
+        SplitPreview.HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Stretch;
+        SplitPreview.VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Stretch;
+        SplitPreview.Margin = new Thickness(left, top, right, bottom);
+        SplitPreview.IsVisible = true;
+    }
+
+    internal void HideSplitPreview()
+    {
+        if (SplitPreview is not null)
+            SplitPreview.IsVisible = false;
+    }
+
+    private void ShowDropIndicator(int index)
+    {
+        TabBar.Classes.Set("drop-target", true);
+        var count = _panel?.Sessions.Count ?? 0;
+        var container = count == 0 ? null : TabStrip.ContainerFromIndex(Math.Min(index, count - 1)) as Control;
+        if (container?.TranslatePoint(new Point(index < count ? 0 : container.Bounds.Width, 0), TabScroller) is not { } at)
+        {
+            DropIndicator.IsVisible = false;
+            return;
+        }
+        DropIndicator.Margin = new Thickness(Math.Clamp(at.X - 1, 0, Math.Max(0, TabScroller.Bounds.Width - 2)), 6, 0, 7);
+        DropIndicator.IsVisible = true;
+    }
+
+    private void HideDropIndicator()
+    {
+        TabBar.Classes.Set("drop-target", false);
+        DropIndicator.IsVisible = false;
+    }
+
+    /// <summary>The drop indicator's position in the tab strip, or null when hidden (for tests).</summary>
+    public double? DropIndicatorX => DropIndicator.IsVisible ? DropIndicator.Margin.Left : null;
+
+    private void OnTabContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (TabFromEvent(e) is not { } tab || e.Source is not Control source) return;
+        var menu = SessionTabMenu.Build(tab, OwnerWindow);
+        menu.Open(source);
+        e.Handled = true;
+    }
+
+    // ── Panel menu ────────────────────────────────────────────────────────
+
+    /// <summary>The panel context menu (header "⋯" button and the panel tab strip).</summary>
+    public static ContextMenu BuildPanelMenu(SessionPanelViewModel panel, Window? owner)
+    {
+        var dock = panel.Owner;
+        var items = new List<Control>();
+
+        var rename = new MenuItem { Header = Localizer.Menu("RenamePanel") + "..." };
+        rename.Click += async (_, _) =>
+        {
+            if (owner is null) return;
+            var name = await new TextPromptDialog(Localizer.Get("RenamePanel"), Localizer.Get("PanelName", "Panel name") + ":",
+                    false, null, panel.Name)
+                .ShowDialog<string?>(owner);
+            if (name is not null && !dock.RenamePanel(panel, name))
+                await new MessageDialog(Localizer.Get("RenamePanel"), Localizer.Format("PanelNameExistsFormat", name.Trim()),
+                    new MessageDialogButton(Localizer.Get("_Ok"), "ok", IsDefault: true, IsCancel: true)).ShowDialog<string?>(owner);
+        };
+        items.Add(rename);
+
+        var floating = new MenuItem { Header = Localizer.Menu(panel.IsFloating ? "DockPanel" : "FloatPanel") };
+        floating.Click += (_, _) => panel.IsFloating = !panel.IsFloating;
+        items.Add(floating);
+
+        var newPanel = new MenuItem { Header = Localizer.Menu("NewPanel") };
+        newPanel.Click += (_, _) => dock.NewPanel();
+        items.Add(newPanel);
+
+        var arrangement = new MenuItem { Header = Localizer.Menu("ArrangePanels") };
+        foreach (var (mode, label) in ArrangementChoices)
+        {
+            var item = new MenuItem
+            {
+                Header = label,
+                ToggleType = MenuItemToggleType.Radio,
+                IsChecked = dock.Arrangement == mode,
+            };
+            item.Click += (_, _) => dock.Arrangement = mode;
+            arrangement.Items.Add(item);
+        }
+        items.Add(arrangement);
+        items.Add(new Separator());
+
+        var close = new MenuItem { Header = Localizer.Menu("ClosePanel") };
+        close.Click += async (_, _) =>
+        {
+            if (panel.Sessions.Count > 0 && owner is not null
+                && !await MessageDialog.ConfirmAsync(owner, Localizer.Get("ClosePanel"),
+                    Localizer.Format("ConfirmClosePanelFormat", panel.Name, panel.Sessions.Count),
+                    Localizer.Get("_Close"), Localizer.Get("_Cancel")))
+            {
+                return;
+            }
+            await dock.ClosePanelAsync(panel);
+        };
+        items.Add(close);
+
+        return new ContextMenu { ItemsSource = items };
+    }
+
+    public static IReadOnlyList<(PanelArrangement Mode, string Label)> ArrangementChoices =>
+    [
+        (PanelArrangement.Tabbed, Localizer.Menu("TabbedOnePanelAtATime")),
+        (PanelArrangement.SideBySide, Localizer.Menu("SideBySide")),
+        (PanelArrangement.Stacked, Localizer.Menu("Stacked")),
+        (PanelArrangement.SplitVertical, Localizer.Menu("SplitVertical")),
+        (PanelArrangement.SplitHorizontal, Localizer.Menu("SplitHorizontal")),
+    ];
+}

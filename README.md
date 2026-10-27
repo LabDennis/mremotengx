@@ -21,6 +21,26 @@ Consider donating — every contribution counts!
   An open source, multi-protocol, tabbed remote connections manager allowing you to view all of your connections in a simple yet powerful interface
 </p>
 
+## Screenshots
+
+The cross-platform app, on Windows, Linux and macOS. The same connection file opens in the classic Windows app.
+
+<p align="center">
+  <img alt="Main window in the dark theme, with the connection tree and an open session" src="docs/images/main-window-dark.png" width="900"><br>
+  <em>Main window, dark theme</em>
+</p>
+
+<p align="center">
+  <img alt="Main window in the light theme" src="docs/images/main-window-light.png" width="49%">
+  <img alt="Options window on the Appearance page, choosing a theme" src="docs/images/options-appearance.png" width="49%"><br>
+  <em>Light theme, and Options → Appearance</em>
+</p>
+
+<p align="center">
+  <img alt="Command palette searching connections, with web-01 selected" src="docs/images/command-palette.png" width="900"><br>
+  <em>Command palette (Ctrl+K)</em>
+</p>
+
 <p align="center">
   <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/mremoteng/mremoteng/total?label=Overall%20Downloads&style=for-the-badge">
 </p>
@@ -76,6 +96,19 @@ The following protocols are supported:
 
 For a detailed feature list and general usage support, refer to the [Documentation](https://mremoteng.readthedocs.io/en/latest/).
 
+## This fork
+
+[Morgadoo/mRemoteNG](https://github.com/Morgadoo/mRemoteNG) is the cross-platform edition. Development stays on the `dev` branch of this fork.
+
+New work from [mRemoteNG/mRemoteNG](https://github.com/mRemoteNG/mRemoteNG) `v1.78.2-dev` is merged in here. Nothing from this fork is pushed or pull-requested back to that repository.
+
+```bash
+git remote add upstream https://github.com/mRemoteNG/mRemoteNG.git   # once
+git fetch upstream
+git checkout dev
+git merge upstream/v1.78.2-dev
+```
+
 ## Build environment
 
 This project must be built on Windows using Visual Studio 2026 tooling. Use the MSBuild.exe from the Visual Studio 2026 installation instead of the .NET Core `dotnet build` fallback; the Windows desktop project requires the Visual Studio build environment and COM/desktop targets.
@@ -112,7 +145,57 @@ Copy-Item .\mRemoteNG.Plugins.MultiAddress\bin\x64\Release\net10.0-windows10.0.2
 
 See [README.plugins.md](README.plugins.md) for the full workflow and details.
 
+The WinForms app and the installer need that Visual Studio build. The cross-platform projects (`mRemoteNG.Avalonia`, `mRemoteNG.Core`, `mRemoteNG.Protocols`) build with the .NET 10 SDK on Windows, Linux and macOS.
+
 ## Installation
+
+### Cross-Platform Installation
+
+The cross-platform (Avalonia) app runs on Windows, Linux and macOS. The screenshots above are that app.
+No packages are published to Flathub, the Snap Store, Homebrew or winget yet; build them with the scripts in
+`packaging/`, or download the artifacts of the nightly workflow.
+
+**Linux**
+```bash
+# AppImage (portable) — packaging/linux/build-appimage.sh
+chmod +x mRemoteNG-*.AppImage && ./mRemoteNG-*.AppImage
+
+# Debian/Ubuntu — packaging/linux/build-deb.sh
+sudo apt install ./mremoteng_*.deb
+```
+
+For RDP install FreeRDP 3 (`sudo apt install freerdp3-x11`); everything else (SSH, SFTP, VNC, Telnet, …) is
+built in.
+
+```bash
+# Flatpak — builds the committed HEAD, installs it for the current user
+./packaging/linux/build-flatpak.sh --bundle      # also writes dist/flatpak/mRemoteNG.flatpak
+flatpak run org.mremoteng.mRemoteNG
+
+# Snap — needs snapcraft (snap install snapcraft --classic)
+cd packaging/linux && snapcraft pack
+sudo snap install --dangerous mremoteng_*.snap && sudo snap connect mremoteng:ssh-keys
+```
+
+The Flatpak and the Snap include FreeRDP 3 (with Kerberos in the Flatpak) and the unixODBC driver manager.
+They are sandboxed. The app can only start programs that are inside the package, so External Tools and
+IntApp do not see the host's terminal emulators or tools, and PowerShell connections need `pwsh` inside the
+sandbox. SQL storage over ODBC needs a driver inside the sandbox too: put the driver's `.so` under your home
+folder and register it in `~/.odbcinst.ini` (in the Snap, `~` is `~/snap/mremoteng/current`), because the
+host's `/usr/lib` and `/etc/odbcinst.ini` are not visible. For Kerberos in the Flatpak, the KDC is found through DNS, because the host's `/etc/krb5.conf` is not
+visible either.
+
+SQL storage over ODBC (Options ▸ SQL Server ▸ ODBC data source) also works outside the packages. On Linux
+and macOS it needs unixODBC (`sudo apt install unixodbc`, `brew install unixodbc`) and the database's ODBC
+driver; on Windows it uses the ODBC Data Source Administrator.
+
+**macOS** — `packaging/macos/build-dmg.sh` builds a DMG; RDP needs `brew install freerdp`.
+
+**Windows** — the classic WinForms installer below; the cross-platform app runs from
+`dotnet publish mRemoteNG.Avalonia -r win-x64` (RDP needs FreeRDP's `wfreerdp.exe`).
+
+Moving from the Windows app? See the [migration guide](docs/user-migration-guide.md): existing `confCons.xml`
+files, including master passwords, open unchanged.
 
 ### Supported Operating Systems
 
@@ -123,11 +206,13 @@ See [README.plugins.md](README.plugins.md) for the full workflow and details.
 - [Windows Server 2019](https://en.wikipedia.org/wiki/Windows_Server_2019)
 - [Windows Server 2016](https://en.wikipedia.org/wiki/Windows_Server_2016)
 - [Windows Server 2012 R2](https://en.wikipedia.org/wiki/Windows_Server_2012_R2)
+- Linux (Debian/Ubuntu, Fedora, Arch and derivatives) — x64 and ARM64
+- macOS 12 Monterey and later — Apple Silicon and Intel
 
 #### Source package
 
 This contains the source code from which mRemoteNG is built.
-You will need to compile it yourself using Visual Studio.
+You will need to compile it yourself using Visual Studio or the .NET 10 SDK.
 
 ### Minimum Requirements
 
@@ -142,7 +227,7 @@ Make sure you have the latest version installed:
 
 ### Download
 
-> :star: Starting Windows 11 you can use winget to install mRemoteNG. Just run `winget install -e --id mRemoteNG.mRemoteNG`
+> Starting Windows 11 you can use winget to install mRemoteNG. Just run `winget install -e --id mRemoteNG.mRemoteNG`
 
 mRemoteNG is available as a redistributable MSI package or as a portable ZIP package and can be downloaded from the following locations:
 * [GitHub](https://github.com/mRemoteNG/mRemoteNG/releases)
@@ -193,7 +278,7 @@ _If you are using the Portable version, simply deleting the folder that contains
 If you find mRemoteNG useful and would like to contribute, it would be greatly appreciated. When you contribute, you make it possible for the team to cover the costs of producing mRemoteNG.
 
 ### Submit Code
-Check out the [Wiki page](https://github.com/mRemoteNG/mRemoteNG/wiki) on how to configure your development environment and submit a pull request.
+Open a pull request against the `dev` branch of this fork. The [upstream wiki](https://github.com/mRemoteNG/mRemoteNG/wiki) describes the development environment.
 
 ### Translate
 Check out the [Wiki page](https://github.com/mRemoteNG/mRemoteNG/wiki) on how to help make mRemoteNG a polyglot.

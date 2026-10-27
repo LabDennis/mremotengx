@@ -33,6 +33,7 @@
     <PackageVersion Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.161" />
     <PackageVersion Include="Microsoft-WindowsAPICodePack-Shell" Version="1.1.5" />
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
+    <PackageVersion Include="MySqlConnector" Version="2.4.0" />
     <PackageVersion Include="NETStandard.Library" Version="2.0.3" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="Newtonsoft.Json.Schema" Version="4.0.2" />
@@ -56,6 +57,8 @@
     <PackageVersion Include="runtime.opensuse.42.1-x64.runtime.native.System.Security.Cryptography.OpenSsl" Version="4.3.3" />
     <PackageVersion Include="runtime.ubuntu.14.04-x64.runtime.native.System.Security.Cryptography.OpenSsl" Version="4.3.3" />
     <PackageVersion Include="runtime.ubuntu.16.10-x64.runtime.native.System.Security.Cryptography.OpenSsl" Version="4.3.3" />
+    <PackageVersion Include="SkiaSharp" Version="2.88.9" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="2.88.9" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
     <PackageVersion Include="System.Buffers" Version="4.6.1" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="10.0.14" />
@@ -71,6 +74,8 @@
     <PackageVersion Include="System.IO.Pipelines" Version="10.0.14" />
     <PackageVersion Include="System.Formats.Asn1" Version="10.0.14" />
     <PackageVersion Include="System.Management" Version="10.0.14" />
+    <PackageVersion Include="System.DirectoryServices.Protocols" Version="10.0.14" />
+    <PackageVersion Include="System.IO.Ports" Version="10.0.14" />
     <PackageVersion Include="System.Memory" Version="4.6.3" />
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
     <PackageVersion Include="System.Net.Primitives" Version="4.3.1" />
@@ -89,6 +94,7 @@
     <PackageVersion Include="System.Security.Cryptography.Cng" Version="5.0.0" />
     <PackageVersion Include="System.Security.Cryptography.OpenSsl" Version="5.0.0" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
     <PackageVersion Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
     <PackageVersion Include="System.Security.Permissions" Version="10.0.14" />
     <PackageVersion Include="System.Security.Principal.Windows" Version="5.0.0" />
@@ -107,5 +113,30 @@
     <PackageVersion Include="WixToolset.UI.wixext" Version="7.0.0" />
     <PackageVersion Include="WixToolset.Util.wixext" Version="7.0.0" />
     <PackageVersion Include="ZstdSharp.Port" Version="0.8.8" />
+    <!-- Avalonia UI -->
+    <PackageVersion Include="Avalonia" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.ReactiveUI" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.2.7" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="11.2.7" />
+    <!-- Transitive (Avalonia.FreeDesktop): 0.20.0 is flagged by NU1903 (GHSA-xrw6-gwf8-vvr9). -->
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.21.3" />
+    <PackageVersion Include="ReactiveUI.Fody" Version="19.5.41" />
+    <PackageVersion Include="Dock.Avalonia" Version="11.0.0" />
+    <PackageVersion Include="Dock.Model.Mvvm" Version="11.0.0" />
+    <PackageVersion Include="Material.Icons.Avalonia" Version="2.1.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.13" />
+    <!-- Cross-platform projects -->
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
+    <PackageVersion Include="ReactiveUI" Version="20.1.1" />
+    <PackageVersion Include="System.Reactive" Version="6.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageVersion Include="FluentAssertions" Version="7.0.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 </Project>

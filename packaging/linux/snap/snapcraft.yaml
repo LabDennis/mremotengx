@@ -1,0 +1,71 @@
+# Snap for the cross-platform app (mRemoteNG.Avalonia).
+#
+# Build from this directory (the part builds the repository's committed HEAD):
+#   cd packaging/linux && snapcraft pack
+#   sudo snap install --dangerous mremoteng_*.snap
+#   sudo snap connect mremoteng:ssh-keys   # SSH private keys in ~/.ssh
+name: mremoteng
+base: core24
+version: '1.78.2-dev'
+summary: Multi-protocol remote connections manager
+description: |
+  mRemoteNG is an open source, tabbed, multi-protocol remote connections manager.
+  It supports SSH (with SFTP and port forwarding), RDP through FreeRDP, VNC,
+  Telnet, rlogin, raw sockets, HTTP/HTTPS and PowerShell remoting, and opens
+  connection files from the Windows version of mRemoteNG unchanged.
+icon: mremoteng.png
+license: GPL-2.0-or-later
+grade: devel
+confinement: strict
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  mremoteng:
+    command: bin/mremoteng
+    desktop: usr/share/applications/org.mremoteng.mRemoteNG.desktop
+    common-id: org.mremoteng.mRemoteNG
+    extensions: [gnome]
+    plugs:
+      - network
+      - network-bind
+      - home
+      - removable-media
+      - ssh-keys
+      - audio-playback
+      - audio-record
+
+parts:
+  mremoteng:
+    plugin: nil
+    source: ../..
+    source-type: git
+    build-packages:
+      - dotnet-sdk-10.0
+    stage-packages:
+      # xfreerdp3 for RDP connections (started as an external process)
+      - freerdp3-x11
+      # ODBC driver manager for SQL storage over ODBC
+      - libodbc2
+      - libicu74
+    override-build: |
+      case "$CRAFT_ARCH_BUILD_FOR" in
+        amd64) RID=linux-x64 ;;
+        arm64) RID=linux-arm64 ;;
+        *) echo "Unsupported architecture: $CRAFT_ARCH_BUILD_FOR" >&2; exit 1 ;;
+      esac
+      export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
+      dotnet publish mRemoteNG.Avalonia/mRemoteNG.Avalonia.csproj \
+        -c Release -r "$RID" --self-contained true \
+        -p:PublishSingleFile=false \
+        -o "$CRAFT_PART_INSTALL/lib/mremoteng"
+      install -Dm755 packaging/linux/snap/launcher.sh "$CRAFT_PART_INSTALL/bin/mremoteng"
+      install -Dm644 packaging/linux/org.mremoteng.mRemoteNG.desktop \
+        "$CRAFT_PART_INSTALL/usr/share/applications/org.mremoteng.mRemoteNG.desktop"
+      sed -i 's|^Icon=.*|Icon=${SNAP}/meta/gui/icon.png|' \
+        "$CRAFT_PART_INSTALL/usr/share/applications/org.mremoteng.mRemoteNG.desktop"
+    prime:
+      - -usr/share/doc
+      - -usr/share/man
