@@ -206,7 +206,7 @@ namespace mRemoteNG.Connection
          AttributeUsedInAllProtocolsExcept()]
         public virtual string Hostname
         {
-            get => _hostname.Trim();
+            get => _hostname?.Trim() ?? string.Empty;
             set => SetField(ref _hostname, value?.Trim(), "Hostname");
         }
 

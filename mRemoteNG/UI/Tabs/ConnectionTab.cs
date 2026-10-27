@@ -152,18 +152,18 @@ namespace mRemoteNG.UI.Tabs
                         }
                         else
                         {
-                            ((InterfaceControl)Tag)?.Protocol.Close();
+                            (Tag as InterfaceControl)?.Protocol.Close();
                         }
                     }
                     else
                     {
                         // close without the confirmation prompt...
-                        ((InterfaceControl)Tag)?.Protocol.Close();
+                        (Tag as InterfaceControl)?.Protocol.Close();
                     }
                 }
                 else
                 {
-                    ((InterfaceControl)Tag)?.Protocol.Close();
+                    (Tag as InterfaceControl)?.Protocol.Close();
                 }
             }
 
@@ -174,7 +174,8 @@ namespace mRemoteNG.UI.Tabs
                 RestoreDockAreasAfterMinimize();
             }
 
-            if (e.Cancel || FrmMain.Default == null || FrmMain.Default.IsClosing)
+            // IsCreated: reading Default would create the main form, e.g. when tabs close in tests.
+            if (e.Cancel || !FrmMain.IsCreated || FrmMain.Default.IsClosing)
                 return;
 
             ConnectionWindow parentWindow = FindForm() as ConnectionWindow;

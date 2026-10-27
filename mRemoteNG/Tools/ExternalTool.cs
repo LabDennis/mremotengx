@@ -180,15 +180,12 @@ namespace mRemoteNG.Tools
             }
             else
             {
-                // With UseShellExecute = false, use ArgumentList for better security
-                // Parse arguments using CommandLineArguments for proper splitting
-                var cmdLineArgs = new Cmdline.CommandLineArguments { EscapeForShell = false };
-                string parsedArguments = argParser.ParseArguments(Arguments);
-                
-                // Split arguments respecting quotes
-                var argumentParts = SplitCommandLineArguments(parsedArguments);
-                foreach (var arg in argumentParts)
+                // With UseShellExecute = false, use ArgumentList for better security.
+                // Split the template first and substitute per argument: values are never re-split
+                // and get no shell escaping, which would otherwise reach the program literally.
+                foreach (string templateArgument in SplitCommandLineArguments(Arguments))
                 {
+                    string arg = argParser.ParseArguments(templateArgument, escapeForShell: false);
                     if (!string.IsNullOrWhiteSpace(arg))
                     {
                         process.StartInfo.ArgumentList.Add(arg);

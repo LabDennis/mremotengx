@@ -166,9 +166,13 @@ namespace mRemoteNG.UI.Window
                 {
                     int contentIndex = Math.Max(0, Math.Min(targetContentIndex.Value, targetPane.DisplayingContents.Count));
                     conTab.DockTo(targetPane, DockStyle.Fill, contentIndex);
+                    // DockTo keeps the old position when the tab already sits in that pane.
+                    targetPane.SetContentIndex(conTab, contentIndex);
                 }
 
-                FrmMain.Default?.ShowHidePanelTabs();
+                // IsCreated: reading Default would create the main form.
+                if (FrmMain.IsCreated)
+                    FrmMain.Default.ShowHidePanelTabs();
                 conTab.Focus();
                 return conTab;
             }
@@ -402,7 +406,7 @@ namespace mRemoteNG.UI.Window
         {
             try
             {
-                var documents = connDock.DocumentsToArray();
+                var documents = DocumentsInTabOrder();
                 if (documents.Length <= 1) return;
 
                 var currentIndex = Array.IndexOf(documents, connDock.ActiveContent);
@@ -425,7 +429,7 @@ namespace mRemoteNG.UI.Window
         {
             try
             {
-                var documents = connDock.DocumentsToArray();
+                var documents = DocumentsInTabOrder();
                 if (documents.Length <= 1) return;
 
                 var currentIndex = Array.IndexOf(documents, connDock.ActiveContent);
@@ -450,7 +454,7 @@ namespace mRemoteNG.UI.Window
         {
             try
             {
-                var documents = connDock.DocumentsToArray();
+                var documents = DocumentsInTabOrder();
                 if (index < 0 || index >= documents.Length) return;
 
                 documents[index].DockHandler.Activate();
@@ -461,11 +465,24 @@ namespace mRemoteNG.UI.Window
             }
         }
 
+        // Tabs in the order they are shown. DocumentsToArray() returns insertion order, which differs
+        // once a tab is put back at its old position, e.g. when a connection is reopened.
+        private IDockContent[] DocumentsInTabOrder()
+        {
+            IDockContent[] documents = connDock.DocumentsToArray();
+            List<IDockContent> shown = connDock.Panes
+                .SelectMany(pane => pane.Contents.Cast<IDockContent>())
+                .Where(documents.Contains)
+                .Distinct()
+                .ToList();
+            return shown.Concat(documents.Except(shown)).ToArray();
+        }
+
         internal IDockContent[] GetDocuments()
         {
             try
             {
-                return connDock.DocumentsToArray();
+                return DocumentsInTabOrder();
             }
             catch (Exception ex)
             {

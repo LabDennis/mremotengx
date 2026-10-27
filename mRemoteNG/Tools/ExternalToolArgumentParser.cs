@@ -15,14 +15,18 @@ namespace mRemoteNG.Tools
     {
         private readonly ConnectionInfo _connectionInfo = connectionInfo;
 
-        public string ParseArguments(string input)
+        /// <param name="escapeForShell">
+        /// False when the result is passed as a single ProcessStartInfo.ArgumentList entry, which
+        /// bypasses the shell: escape characters would then reach the program literally.
+        /// </param>
+        public string ParseArguments(string input, bool escapeForShell = true)
         {
-            List<Replacement> replacements = BuildReplacementList(input);
+            List<Replacement> replacements = BuildReplacementList(input, escapeForShell);
             string result = PerformReplacements(input, replacements);
             return result;
         }
 
-        private List<Replacement> BuildReplacementList(string input)
+        private List<Replacement> BuildReplacementList(string input, bool escapeForShell)
         {
             int index = 0;
             List<Replacement> replacements = new();
@@ -118,6 +122,9 @@ namespace mRemoteNG.Tools
                     char trailing = tokenEnd + 2 <= input.Length
                         ? input.Substring(tokenEnd + 1, 1).ToCharArray()[0]
                         : '\0';
+
+                    if (!escapeForShell)
+                        escape = EscapeType.None;
 
                     if (escape == EscapeType.All)
                     {
