@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <xs:schema id="mremoteng_confcons_v2_9"
            targetNamespace="http://mremoteng.org"
@@ -92,6 +92,7 @@
     <xs:attribute name="PostExtApp" type="xs:string" use="required" />
     <xs:attribute name="MacAddress" type="xs:string" use="required" />
     <xs:attribute name="UserField" type="xs:string" use="required" />
+    <xs:attribute name="UserFields" type="xs:string" use="optional" />
     <xs:attribute name="EnvironmentTags" type="xs:string" use="required" />
     <xs:attribute name="ExtApp" type="xs:string" use="required" />
     <xs:attribute name="Favorite" type="xs:string" use="required" />
@@ -170,6 +171,7 @@
     <xs:attribute name="InheritUseVmId" type="xs:boolean" use="optional" />
     <xs:attribute name="InheritUseEnhancedMode" type="xs:boolean" use="optional" />
     <xs:attribute name="InheritUserField" type="xs:boolean" use="optional" />
+    <xs:attribute name="InheritUserFields" type="xs:boolean" use="optional" />
     <xs:attribute name="InheritEnvironmentTags" type="xs:boolean" use="optional" />
     <xs:attribute name="InheritExtApp" type="xs:boolean" use="optional" />
     <xs:attribute name="InheritFavorite" type="xs:boolean" use="optional" />
