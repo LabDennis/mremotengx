@@ -1,4 +1,4 @@
-﻿using mRemoteNG.Connection;
+using mRemoteNG.Connection;
 using mRemoteNG.Container;
 using mRemoteNG.UI.Window;
 using NUnit.Framework;
@@ -41,7 +41,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_folder);
 
                 // Assert
                 Assert.That(result.Count, Is.EqualTo(2));
@@ -69,7 +69,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_folder);
 
                 // Assert
                 Assert.That(result.Count, Is.EqualTo(2));
@@ -92,7 +92,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_folder);
 
                 // Assert
                 Assert.That(result, Is.Empty);
@@ -112,7 +112,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_mockConnection1);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_mockConnection1);
 
                 // Assert
                 Assert.That(result, Is.Empty);
@@ -135,7 +135,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_folder);
 
                 // Assert
                 Assert.That(result.Count, Is.EqualTo(2));
@@ -166,7 +166,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(level1Folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(level1Folder);
 
                 // Assert
                 Assert.That(result.Count, Is.EqualTo(1));
@@ -194,7 +194,7 @@ namespace mRemoteNGTests.UI.Window
             try
             {
                 // Act
-                var result = window.PublicGetDirectChildConnections(_folder);
+                var result = ConnectionTreeWindow.PublicGetDirectChildConnections(_folder);
 
                 // Assert
                 Assert.That(result.Count, Is.EqualTo(2));
