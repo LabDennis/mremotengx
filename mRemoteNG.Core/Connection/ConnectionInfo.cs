@@ -100,6 +100,7 @@ namespace mRemoteNG.Core.Connection
         private string _macAddress = "";
         private string _openingCommand = "";
         private string _userField = "";
+        private string _userFields = "";
         private string _environmentTags = "";
         private string _rdpStartProgram = "";
         private string _rdpStartProgramWorkDir = "";
@@ -587,6 +588,12 @@ namespace mRemoteNG.Core.Connection
         {
             get => GetPropertyValue(nameof(UserField), _userField);
             set => SetField(ref _userField, value);
+        }
+
+        public virtual string UserFields
+        {
+            get => GetPropertyValue(nameof(UserFields), _userFields);
+            set => SetField(ref _userFields, value);
         }
 
         public virtual string EnvironmentTags

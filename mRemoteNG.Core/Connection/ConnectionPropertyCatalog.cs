@@ -384,6 +384,7 @@ namespace mRemoteNG.Core.Connection
             [nameof(ConnectionInfo.PreExtApp)] = ("ExternalToolBefore", "PropertyDescriptionExternalToolBefore"),
             [nameof(ConnectionInfo.PostExtApp)] = ("ExternalToolAfter", "PropertyDescriptionExternalToolAfter"),
             [nameof(ConnectionInfo.UserField)] = ("UserField", "PropertyDescriptionUser1"),
+            [nameof(ConnectionInfo.UserFields)] = ("UserFields", "PropertyDescriptionUserFields"),
         };
 
         private static readonly ProtocolType[] Rdp = [ProtocolType.RDP];
@@ -722,6 +723,8 @@ namespace mRemoteNG.Core.Connection
                 ConnectionPropertyEditor.Suggest, suggestions: ConnectionPropertySuggestions.ExternalTools);
             Add(nameof(ConnectionInfo.UserField), misc, "Miscellaneous", "User field",
                 "Free text for any information you need (available to external tools as %USERFIELD%).");
+            Add(nameof(ConnectionInfo.UserFields), misc, "Miscellaneous", "User fields",
+                "Custom name=value pairs, separated by semicolons (available to external tools as %name%).");
 
             return list;
         }

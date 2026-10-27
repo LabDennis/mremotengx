@@ -220,6 +220,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             node.Icon = GetAttr(e, "Icon", "mRemoteNG");
             node.Panel = GetAttr(e, "Panel", "General");
             node.TabColor = GetAttr(e, "TabColor", "");
+            node.Color = GetAttr(e, "Color", "");
             node.ConnectionFrameColor = GetEnum(e, "ConnectionFrameColor", ConnectionFrameColor.None);
 
             // Connection
@@ -328,6 +329,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             node.PostExtApp = GetAttr(e, "PostExtApp", "");
             node.MacAddress = GetAttr(e, "MacAddress", "");
             node.UserField = GetAttr(e, "UserField", "");
+            node.UserFields = GetAttr(e, "UserFields", "");
             node.Favorite = GetBool(e, "Favorite", false);
             node.EnvironmentTags = GetAttr(e, "EnvironmentTags", "");
             // "Connected" marks sessions the legacy app reopens at startup; kept so a round trip
@@ -367,6 +369,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             inh.Icon = GetBool(e, "InheritIcon", false);
             inh.Panel = GetBool(e, "InheritPanel", false);
             inh.TabColor = GetBool(e, "InheritTabColor", false);
+            inh.Color = GetBool(e, "InheritColor", false);
             inh.ConnectionFrameColor = GetBool(e, "InheritConnectionFrameColor", false);
             inh.Password = GetBool(e, "InheritPassword", false);
             inh.Port = GetBool(e, "InheritPort", false);
@@ -404,6 +407,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             inh.PostExtApp = GetBool(e, "InheritPostExtApp", false);
             inh.MacAddress = GetBool(e, "InheritMacAddress", false);
             inh.UserField = GetBool(e, "InheritUserField", false);
+            inh.UserFields = GetBool(e, "InheritUserFields", false);
             inh.ExtApp = GetBool(e, "InheritExtApp", false);
             inh.Favorite = GetBool(e, "InheritFavorite", false);
             inh.EnvironmentTags = GetBool(e, "InheritEnvironmentTags", false);

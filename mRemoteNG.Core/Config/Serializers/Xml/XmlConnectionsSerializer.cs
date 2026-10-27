@@ -121,6 +121,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("Panel", node.Panel);
             element.SetAttribute("Id", node.ConstantID);
             element.SetAttribute("TabColor", node.TabColor);
+            element.SetAttribute("Color", node.Color);
             element.SetAttribute("ConnectionFrameColor", node.ConnectionFrameColor.ToString());
 
             // Connection
@@ -242,6 +243,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("PostExtApp", node.PostExtApp);
             element.SetAttribute("MacAddress", node.MacAddress);
             element.SetAttribute("UserField", node.UserField);
+            element.SetAttribute("UserFields", node.UserFields);
             element.SetAttribute("Favorite", node.Favorite.ToString().ToLowerInvariant());
             element.SetAttribute("EnvironmentTags", node.EnvironmentTags);
             element.SetAttribute("Connected", node.PleaseConnect.ToString().ToLowerInvariant());
@@ -278,6 +280,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("InheritIcon", inh.Icon.ToString().ToLowerInvariant());
             element.SetAttribute("InheritPanel", inh.Panel.ToString().ToLowerInvariant());
             element.SetAttribute("InheritTabColor", inh.TabColor.ToString().ToLowerInvariant());
+            element.SetAttribute("InheritColor", inh.Color.ToString().ToLowerInvariant());
             element.SetAttribute("InheritConnectionFrameColor", inh.ConnectionFrameColor.ToString().ToLowerInvariant());
             element.SetAttribute("InheritPassword", inh.Password.ToString().ToLowerInvariant());
             element.SetAttribute("InheritPort", inh.Port.ToString().ToLowerInvariant());
@@ -315,6 +318,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("InheritPostExtApp", inh.PostExtApp.ToString().ToLowerInvariant());
             element.SetAttribute("InheritMacAddress", inh.MacAddress.ToString().ToLowerInvariant());
             element.SetAttribute("InheritUserField", inh.UserField.ToString().ToLowerInvariant());
+            element.SetAttribute("InheritUserFields", inh.UserFields.ToString().ToLowerInvariant());
             element.SetAttribute("InheritExtApp", inh.ExtApp.ToString().ToLowerInvariant());
             element.SetAttribute("InheritFavorite", inh.Favorite.ToString().ToLowerInvariant());
             element.SetAttribute("InheritEnvironmentTags", inh.EnvironmentTags.ToString().ToLowerInvariant());

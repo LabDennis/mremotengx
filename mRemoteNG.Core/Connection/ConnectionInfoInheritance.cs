@@ -97,6 +97,7 @@ namespace mRemoteNG.Core.Connection
         public bool PostExtApp { get; set; }
         public bool MacAddress { get; set; }
         public bool UserField { get; set; }
+        public bool UserFields { get; set; }
         public bool EnvironmentTags { get; set; }
         public bool Favorite { get; set; }
 
