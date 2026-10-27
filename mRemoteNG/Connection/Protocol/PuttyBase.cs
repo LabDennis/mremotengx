@@ -1,4 +1,4 @@
-﻿using mRemoteNG.App;
+using mRemoteNG.App;
 using mRemoteNG.Messages;
 using mRemoteNG.Resources.Language;
 using mRemoteNG.Security;
@@ -30,10 +30,13 @@ namespace mRemoteNG.Connection.Protocol
     public class PuttyBase : ProtocolBase
     {
         private const int IDM_RECONF = 0x50; // PuTTY Settings Menu ID
+        private const int TitleMonitorIntervalMs = 500;
         private bool _isPuttyNg;
         private readonly DisplayProperties _display = new();
         private Panel? _puttyContainerPanel; // Panel to hold PuTTY with margins
         private string? _temporaryPrivateKeyPath;
+        private System.Threading.Timer _titleMonitorTimer;
+        private string _lastWindowTitle;
 
         #region Public Properties
 
@@ -696,6 +699,12 @@ namespace mRemoteNG.Connection.Protocol
 
                 Resize(this, new EventArgs());
                 base.Connect();
+
+                // Start monitoring PuTTY window title for dynamic tab naming
+                _lastWindowTitle = PuttyProcess.MainWindowTitle;
+                Event_TitleChanged(this, _lastWindowTitle);
+                _titleMonitorTimer = new System.Threading.Timer(MonitorPuttyTitle, null, TitleMonitorIntervalMs, TitleMonitorIntervalMs);
+
                 return true;
             }
             catch (Exception ex)
@@ -718,6 +727,32 @@ namespace mRemoteNG.Connection.Protocol
             catch (Exception ex)
             {
                 Runtime.MessageCollector.AddMessage(MessageClass.ErrorMsg, Language.PuttyFocusFailed + Environment.NewLine + ex.Message, true);
+            }
+        }
+
+        private void MonitorPuttyTitle(object state)
+        {
+            try
+            {
+                if (PuttyProcess == null || PuttyProcess.HasExited)
+                {
+                    _titleMonitorTimer?.Dispose();
+                    return;
+                }
+
+                PuttyProcess.Refresh();
+                string currentTitle = PuttyProcess.MainWindowTitle;
+                if (currentTitle != _lastWindowTitle)
+                {
+                    _lastWindowTitle = currentTitle;
+                    Event_TitleChanged(this, currentTitle);
+                }
+            }
+            catch (Exception ex)
+            {
+                _titleMonitorTimer?.Dispose();
+                Runtime.MessageCollector.AddMessage(MessageClass.InformationMsg,
+                    "PuTTY title monitoring stopped: " + ex.Message, true);
             }
         }
 
@@ -751,6 +786,8 @@ namespace mRemoteNG.Connection.Protocol
         {
             CleanupTemporaryPrivateKey();
             CleanupEmbeddedPutty();
+            _titleMonitorTimer?.Dispose();
+            _titleMonitorTimer = null;
 
             try
             {

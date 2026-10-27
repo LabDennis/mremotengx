@@ -42,6 +42,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
             chkOpenNewTabRightOfSelected.Text = Language.OpenNewTabRight;
             chkShowLogonInfoOnTabs.Text = Language.ShowLogonInfoOnTabs;
             chkShowProtocolOnTabs.Text = Language.ShowProtocolOnTabs;
+            chkUseTerminalTitleForTabs.Text = Language.UseTerminalTitleForTabs;
             chkIdentifyQuickConnectTabs.Text = Language.IdentifyQuickConnectTabs;
             chkDoubleClickClosesTab.Text = Language.DoubleClickTabClosesIt;
             chkAlwaysShowPanelSelectionDlg.Text = Language.AlwaysShowPanelSelection;
@@ -73,6 +74,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
 
             chkShowLogonInfoOnTabs.Checked = Properties.OptionsTabsPanelsPage.Default.ShowLogonInfoOnTabs;
             chkShowProtocolOnTabs.Checked = Properties.OptionsTabsPanelsPage.Default.ShowProtocolOnTabs;
+            chkUseTerminalTitleForTabs.Checked = Properties.OptionsTabsPanelsPage.Default.UseTerminalTitleForTabs;
             chkIdentifyQuickConnectTabs.Checked = Properties.OptionsTabsPanelsPage.Default.IdentifyQuickConnectTabs;
             chkDoubleClickClosesTab.Checked = Properties.OptionsTabsPanelsPage.Default.DoubleClickOnTabClosesIt;
             chkAlwaysShowPanelSelectionDlg.Checked = Properties.OptionsTabsPanelsPage.Default.AlwaysShowPanelSelectionDlg;
@@ -105,6 +107,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
 
             Properties.OptionsTabsPanelsPage.Default.ShowLogonInfoOnTabs = chkShowLogonInfoOnTabs.Checked;
             Properties.OptionsTabsPanelsPage.Default.ShowProtocolOnTabs = chkShowProtocolOnTabs.Checked;
+            Properties.OptionsTabsPanelsPage.Default.UseTerminalTitleForTabs = chkUseTerminalTitleForTabs.Checked;
             Properties.OptionsTabsPanelsPage.Default.IdentifyQuickConnectTabs = chkIdentifyQuickConnectTabs.Checked;
             Properties.OptionsTabsPanelsPage.Default.DoubleClickOnTabClosesIt = chkDoubleClickClosesTab.Checked;
             Properties.OptionsTabsPanelsPage.Default.AlwaysShowPanelSelectionDlg = chkAlwaysShowPanelSelectionDlg.Checked;
@@ -143,6 +146,9 @@ namespace mRemoteNG.UI.Forms.OptionsPages
             if (pageRegSettingsInstance.IdentifyQuickConnectTabs.IsSet)
                 DisableControl(chkIdentifyQuickConnectTabs);
 
+            if (pageRegSettingsInstance.UseTerminalTitleForTabs.IsSet)
+                DisableControl(chkUseTerminalTitleForTabs);
+
             if (pageRegSettingsInstance.DoubleClickOnTabClosesIt.IsSet)
                 DisableControl(chkDoubleClickClosesTab);
 
@@ -171,6 +177,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
                 || pageRegSettingsInstance.ShowLogonInfoOnTabs.IsSet
                 || pageRegSettingsInstance.ShowProtocolOnTabs.IsSet
                 || pageRegSettingsInstance.IdentifyQuickConnectTabs.IsSet
+                || pageRegSettingsInstance.UseTerminalTitleForTabs.IsSet
                 || pageRegSettingsInstance.DoubleClickOnTabClosesIt.IsSet
                 || pageRegSettingsInstance.AlwaysShowPanelSelectionDlg.IsSet
                 || pageRegSettingsInstance.CreateEmptyPanelOnStartUp.IsSet
