@@ -50,6 +50,30 @@ namespace mRemoteNGTests.Config.Serializers.ConnectionSerializers.Csv
             return propertyValue;
         }
 
+        // Enables one flag at a time so a header/value column shift cannot hide behind all-true values.
+        [Test]
+        public void EachInheritanceFlagSurvivesExportAndImportAlone()
+        {
+            var flags = typeof(ConnectionInfoInheritance).GetProperties()
+                .Where(p => p.PropertyType == typeof(bool) && p.CanWrite
+                            && p.Name != nameof(ConnectionInfoInheritance.EverythingInherited)
+                            && p.Name != nameof(ConnectionInfoInheritance.InheritanceActive))
+                .ToList();
+
+            foreach (var flag in flags)
+            {
+                var original = GetTestConnection();
+                original.Inheritance.TurnOffInheritanceCompletely();
+                flag.SetValue(original.Inheritance, true);
+
+                var connection = _deserializer.Deserialize(_serializer.Serialize(original)).GetRecursiveChildList().First();
+                connection.RemoveParent();
+
+                var wrong = flags.Where(f => (bool)f.GetValue(connection.Inheritance) != (f == flag)).Select(f => f.Name).ToList();
+                Assert.That(wrong, Is.Empty, $"Only {flag.Name} was set");
+            }
+        }
+
         [Test]
         public void FileFromAnExportWithTheMergedRedirectHeaderIsReadInPlace()
         {

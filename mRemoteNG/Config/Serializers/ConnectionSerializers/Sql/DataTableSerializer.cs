@@ -39,17 +39,13 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
         {
             try
             {
-                _dataTable = BuildTable();
-
-                _currentNodeIndex = 0;
-
                 ContainerInfo rootNode = connectionTreeModel.RootNodes.First(node => node is RootNodeInfo);
 
                 return Serialize(rootNode);
             }
             catch (Exception)
             {
-                return _dataTable;
+                return _dataTable ??= BuildTable();
             }
         }
 
@@ -75,6 +71,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
         private DataTable BuildTable()
         {
             DataTable dataTable = _sourceDataTable ?? new DataTable(TABLE_NAME);
+            _sourcePrimaryKeyDict.Clear();
 
             if (dataTable.Columns.Count == 0) CreateSchema(dataTable);
 

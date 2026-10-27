@@ -76,8 +76,8 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
                           "InheritEnvironmentTags;InheritFavorite;InheritExtApp;InheritVNCCompression;InheritVNCEncoding;InheritVNCAuthMode;InheritVNCProxyType;InheritVNCProxyIP;" +
                           "InheritVNCProxyPort;InheritVNCProxyUsername;InheritVNCProxyPassword;InheritVNCColors;InheritVNCSmartSizeMode;InheritVNCViewOnly;" +
                           "InheritRDGatewayUsageMethod;InheritRDGatewayHostname;InheritRDGatewayUseConnectionCredentials;InheritRDGatewayUsername;" +
-                          "InheritRDGatewayPassword;InheritRDGatewayDomain;InheritRDGatewayExternalCredentialProvider;InheritRDGatewayUserViaAPI;InheritRDPAlertIdleTimeout;InheritRDPMinutesToIdleTimeout;InheritSoundQuality;InheritUserViaAPI;" +
-                          "InheritRedirectAudioCapture;InheritRdpVersion;InheritExternalCredentialProvider");
+                          "InheritRDGatewayPassword;InheritRDGatewayDomain;InheritRDGatewayExternalCredentialProvider;InheritRDGatewayUserViaAPI;InheritRDPAlertIdleTimeout;InheritRDPMinutesToIdleTimeout;InheritSoundQuality;" +
+                          "InheritRedirectAudioCapture;InheritRdpVersion;InheritUserViaAPI;InheritExternalCredentialProvider;InheritColor;InheritRDGatewayAccessToken");
         }
 
         private void SerializeNodesRecursive(ConnectionInfo node, StringBuilder sb)
@@ -279,7 +279,9 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
               .Append(FormatForCsv(con.Inheritance.RedirectAudioCapture))
               .Append(FormatForCsv(con.Inheritance.RdpVersion))
               .Append(FormatForCsv(con.Inheritance.UserViaAPI))
-              .Append(FormatForCsv(con.Inheritance.ExternalCredentialProvider));
+              .Append(FormatForCsv(con.Inheritance.ExternalCredentialProvider))
+              .Append(FormatForCsv(con.Inheritance.Color))
+              .Append(FormatForCsv(con.Inheritance.RDGatewayAccessToken));
         }
 
         private string FormatForCsv(object value)
