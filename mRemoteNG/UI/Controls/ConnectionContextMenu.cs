@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -19,6 +19,8 @@ using System.Runtime.Versioning;
 using System.Collections.Generic;
 using mRemoteNG.PluginContracts;
 using mRemoteNG.Security;
+using mRemoteNG.Credential;
+using mRemoteNG.UI.Forms;
 using mRemoteNG.UI.TaskDialog;
 
 // ReSharper disable UnusedParameter.Local
@@ -34,6 +36,7 @@ namespace mRemoteNG.UI.Controls
         private ToolStripMenuItem _cMenTreeAddRoot;
         private ToolStripSeparator _cMenTreeSep1;
         private ToolStripMenuItem _cMenTreeConnect;
+        private ToolStripMenuItem _cMenTreeConnectWithCredentials;
         private ToolStripMenuItem _cMenTreeConnectWithOptions;
         private ToolStripMenuItem _cMenTreeConnectWithOptionsConnectToConsoleSession;
         private ToolStripMenuItem _cMenTreeConnectWithOptionsNoCredentials;
@@ -94,6 +97,7 @@ namespace mRemoteNG.UI.Controls
         private void InitializeComponent()
         {
             _cMenTreeConnect = new ToolStripMenuItem();
+            _cMenTreeConnectWithCredentials = new ToolStripMenuItem();
             _cMenTreeConnectWithOptions = new ToolStripMenuItem();
             _cMenTreeConnectWithOptionsConnectToConsoleSession = new ToolStripMenuItem();
             _cMenTreeConnectWithOptionsDontConnectToConsoleSession = new ToolStripMenuItem();
@@ -141,6 +145,7 @@ namespace mRemoteNG.UI.Controls
             Items.AddRange(new ToolStripItem[]
             {
                 _cMenTreeConnect,
+                _cMenTreeConnectWithCredentials,
                 _cMenTreeConnectWithOptions,
                 _cMenTreeDisconnect,
                 _cMenTreeSep1,
@@ -176,6 +181,14 @@ namespace mRemoteNG.UI.Controls
             _cMenTreeConnect.Size = new System.Drawing.Size(199, 22);
             _cMenTreeConnect.Text = "Connect";
             _cMenTreeConnect.Click += OnConnectClicked;
+            //
+            // cMenTreeConnectWithCredentials
+            //
+            _cMenTreeConnectWithCredentials.Image = Properties.Resources.Key_16x;
+            _cMenTreeConnectWithCredentials.Name = "_cMenTreeConnectWithCredentials";
+            _cMenTreeConnectWithCredentials.Size = new System.Drawing.Size(199, 22);
+            _cMenTreeConnectWithCredentials.Text = "Connect With Credentials";
+            _cMenTreeConnectWithCredentials.Click += OnConnectWithCredentialsClicked;
             //
             // cMenTreeConnectWithOptions
             //
@@ -477,6 +490,7 @@ namespace mRemoteNG.UI.Controls
         private void ApplyLanguage()
         {
             _cMenTreeConnect.Text = Language.Connect;
+            _cMenTreeConnectWithCredentials.Text = Language.ConnectWithCredentials;
             _cMenTreeConnectWithOptions.Text = Language.ConnectWithOptions;
             _cMenTreeConnectWithOptionsConnectToConsoleSession.Text = Language.ConnectToConsoleSession;
             _cMenTreeConnectWithOptionsDontConnectToConsoleSession.Text = Language.DontConnectToConsoleSession;
@@ -588,6 +602,7 @@ namespace mRemoteNG.UI.Controls
             _cMenTreeAddFolder.Enabled = false;
             _cMenTreeAddRoot.Enabled = false;
             _cMenTreeConnect.Enabled = false;
+            _cMenTreeConnectWithCredentials.Enabled = false;
             _cMenTreeConnectWithOptions.Enabled = false;
             _cMenTreeDisconnect.Enabled = false;
             _cMenTreeConnectWithOptions.Enabled = false;
@@ -611,6 +626,7 @@ namespace mRemoteNG.UI.Controls
         internal void ShowHideMenuItemsForRootConnectionNode()
         {
             _cMenTreeConnect.Enabled = false;
+            _cMenTreeConnectWithCredentials.Enabled = false;
             _cMenTreeConnectWithOptions.Enabled = false;
             _cMenTreeConnectWithOptionsConnectInFullscreen.Enabled = false;
             _cMenTreeConnectWithOptionsConnectToConsoleSession.Enabled = false;
@@ -636,6 +652,7 @@ namespace mRemoteNG.UI.Controls
             _cMenTreeDisconnect.Enabled = hasOpenConnections;
 
             _cMenTreeWakeOnLan.Enabled = false;
+            _cMenTreeConnectWithCredentials.Enabled = false;
             _cMenTreeConnectWithOptionsViewOnly.Enabled = false;
         }
 
@@ -648,6 +665,7 @@ namespace mRemoteNG.UI.Controls
             if (connectionInfo.OpenConnections.Count == 0)
                 _cMenTreeDisconnect.Enabled = false;
 
+            _cMenTreeConnectWithCredentials.Enabled = false;
             _cMenTreeConnectWithOptionsConnectInFullscreen.Enabled = false;
             _cMenTreeConnectWithOptionsConnectToConsoleSession.Enabled = false;
             _cMenTreeToolsSort.Enabled = false;
@@ -781,6 +799,25 @@ namespace mRemoteNG.UI.Controls
                 Runtime.ConnectionInitiator.OpenConnection(selectedNodeAsContainer, ConnectionInfo.Force.DoNotJump);
             else
                 Runtime.ConnectionInitiator.OpenConnection(_connectionTree.SelectedNode, ConnectionInfo.Force.DoNotJump);
+        }
+
+        private void OnConnectWithCredentialsClicked(object sender, EventArgs e)
+        {
+            ConnectionInfo selectedNode = _connectionTree.SelectedNode;
+            if (selectedNode == null || selectedNode is ContainerInfo)
+                return;
+
+            using FrmChooseCredential frmChooseCredential = new();
+            if (frmChooseCredential.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            ICredentialRecord selectedCredential = frmChooseCredential.SelectedCredential;
+            if (selectedCredential == null)
+                return;
+
+            ConnectionInfo connectionWithCredential =
+                ConnectionCredentialApplier.ApplyCredential(selectedNode, selectedCredential);
+            Runtime.ConnectionInitiator.OpenConnection(selectedNode, connectionWithCredential, ConnectionInfo.Force.DoNotJump);
         }
 
         private void OnConnectToConsoleSessionClicked(object sender, EventArgs e)
