@@ -1,4 +1,4 @@
-﻿
+
 
 using System.Windows.Forms;
 using mRemoteNG.UI.Controls;
@@ -40,6 +40,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
             lblLanguage = new MrngLabel();
             chkShowFullConnectionsFilePathInTitle = new MrngCheckBox();
             chkShowDescriptionTooltipsInTree = new MrngCheckBox();
+            chkShowStatusIndicatorInTree = new MrngCheckBox();
             chkShowSystemTrayIcon = new MrngCheckBox();
             chkMinimizeToSystemTray = new MrngCheckBox();
             chkCloseToSystemTray = new MrngCheckBox();
@@ -112,6 +113,32 @@ namespace mRemoteNG.UI.Forms.OptionsPages
             chkShowDescriptionTooltipsInTree.TabIndex = 3;
             chkShowDescriptionTooltipsInTree.Text = "Show description tooltips in connection tree";
             chkShowDescriptionTooltipsInTree.UseVisualStyleBackColor = true;
+            // 
+            // chkShowStatusIndicatorInTree
+            // 
+            chkShowStatusIndicatorInTree._mice = MrngCheckBox.MouseState.OUT;
+            chkShowStatusIndicatorInTree.AutoSize = true;
+            chkShowStatusIndicatorInTree.Dock = DockStyle.Fill;
+            chkShowStatusIndicatorInTree.Margin = new Padding(6, 3, 3, 6);
+            chkShowStatusIndicatorInTree.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkShowStatusIndicatorInTree.Location = new System.Drawing.Point(3, 130);
+            chkShowStatusIndicatorInTree.Name = "chkShowStatusIndicatorInTree";
+            chkShowStatusIndicatorInTree.Size = new System.Drawing.Size(290, 17);
+            chkShowStatusIndicatorInTree.TabIndex = 10;
+            chkShowStatusIndicatorInTree.Text = "Show host status indicator in connection tree";
+            chkShowStatusIndicatorInTree.UseVisualStyleBackColor = true;
+            // 
+            // chkShowFullConnectionsFilePathInTitle
+            // 
+            chkShowFullConnectionsFilePathInTitle._mice = MrngCheckBox.MouseState.OUT;
+            chkShowFullConnectionsFilePathInTitle.AutoSize = true;
+            chkShowFullConnectionsFilePathInTitle.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkShowFullConnectionsFilePathInTitle.Location = new System.Drawing.Point(3, 153);
+            chkShowFullConnectionsFilePathInTitle.Name = "chkShowFullConnectionsFilePathInTitle";
+            chkShowFullConnectionsFilePathInTitle.Size = new System.Drawing.Size(268, 17);
+            chkShowFullConnectionsFilePathInTitle.TabIndex = 4;
+            chkShowFullConnectionsFilePathInTitle.Text = "Show full connections file path in window title";
+            chkShowFullConnectionsFilePathInTitle.UseVisualStyleBackColor = true;
             // 
             // chkShowSystemTrayIcon
             // 
@@ -192,10 +219,12 @@ namespace mRemoteNG.UI.Forms.OptionsPages
             tableLayoutPanelAppearance.Controls.Add(chkMinimizeToSystemTray, 0, 6);
             tableLayoutPanelAppearance.Controls.Add(chkCloseToSystemTray, 0, 7);
             tableLayoutPanelAppearance.Controls.Add(chkEnableConnectionTreeAnimations, 0, 8);
+            tableLayoutPanelAppearance.Controls.Add(chkShowStatusIndicatorInTree, 0, 9);
             tableLayoutPanelAppearance.Dock = DockStyle.Fill;
             tableLayoutPanelAppearance.Location = new System.Drawing.Point(0, 0);
             tableLayoutPanelAppearance.Name = "tableLayoutPanelAppearance";
-            tableLayoutPanelAppearance.RowCount = 9;
+            tableLayoutPanelAppearance.RowCount = 10;
+            tableLayoutPanelAppearance.RowStyles.Add(new RowStyle());
             tableLayoutPanelAppearance.RowStyles.Add(new RowStyle());
             tableLayoutPanelAppearance.RowStyles.Add(new RowStyle());
             tableLayoutPanelAppearance.RowStyles.Add(new RowStyle());
@@ -240,6 +269,7 @@ namespace mRemoteNG.UI.Forms.OptionsPages
         internal Controls.MrngLabel lblLanguage;
         internal MrngCheckBox chkShowFullConnectionsFilePathInTitle;
         internal MrngCheckBox chkShowDescriptionTooltipsInTree;
+        internal MrngCheckBox chkShowStatusIndicatorInTree;
         internal MrngCheckBox chkShowSystemTrayIcon;
         internal MrngCheckBox chkMinimizeToSystemTray;
         internal MrngCheckBox chkCloseToSystemTray;

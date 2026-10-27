@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -60,6 +60,19 @@ namespace mRemoteNG.Connection
 
         [Browsable(false)]
         public IReadOnlyDictionary<string, string> PluginProperties => _pluginProperties;
+        private HostStatus _hostStatus = HostStatus.Unknown;
+
+        [Browsable(false)]
+        public HostStatus HostStatus
+        {
+            get => _hostStatus;
+            set
+            {
+                if (_hostStatus == value) return;
+                _hostStatus = value;
+                RaisePropertyChangedEvent(this, new PropertyChangedEventArgs(nameof(HostStatus)));
+            }
+        }
 
         #endregion
 
