@@ -25,7 +25,7 @@ namespace mRemoteNG.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ThemingActive {
             get {
                 return ((bool)(this["ThemingActive"]));
@@ -37,7 +37,7 @@ namespace mRemoteNG.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("vs2015Light")]
+        [global::System.Configuration.DefaultSettingValueAttribute("vs2015Dark")]
         public string ThemeName {
             get {
                 return ((string)(this["ThemeName"]));
@@ -61,7 +61,7 @@ namespace mRemoteNG.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool IsActiveThemeDark {
             get {
                 return ((bool)(this["IsActiveThemeDark"]));

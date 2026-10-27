@@ -139,7 +139,7 @@ namespace mRemoteNG.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool CheckForUpdatesOnStartup {
             get {
                 return ((bool)(this["CheckForUpdatesOnStartup"]));
@@ -175,7 +175,7 @@ namespace mRemoteNG.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool CheckForUpdatesAsked {
             get {
                 return ((bool)(this["CheckForUpdatesAsked"]));

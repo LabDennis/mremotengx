@@ -3,16 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="ThemingActive" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ThemeName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">vs2015Light</Value>
+      <Value Profile="(Default)">vs2015Dark</Value>
     </Setting>
     <Setting Name="cbThemePageInOptionMenu" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="IsActiveThemeDark" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>
