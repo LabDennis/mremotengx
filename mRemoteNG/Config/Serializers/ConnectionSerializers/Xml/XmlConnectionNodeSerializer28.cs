@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Versioning;
 using System.Security;
 using System.Xml.Linq;
@@ -96,6 +96,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
             element.Add(new XAttribute("PostExtApp", connectionInfo.PostExtApp));
             element.Add(new XAttribute("MacAddress", connectionInfo.MacAddress));
             element.Add(new XAttribute("UserField", connectionInfo.UserField));
+            element.Add(new XAttribute("UserFields", connectionInfo.UserFields));
             element.Add(new XAttribute("EnvironmentTags", connectionInfo.EnvironmentTags));
             element.Add(new XAttribute("Favorite", connectionInfo.Favorite));
             element.Add(new XAttribute("ExtApp", connectionInfo.ExtApp));
@@ -233,6 +234,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Xml
             AddInheritanceAttribute(element, inheritance.PostExtApp, "InheritPostExtApp");
             AddInheritanceAttribute(element, inheritance.MacAddress, "InheritMacAddress");
             AddInheritanceAttribute(element, inheritance.UserField, "InheritUserField");
+            AddInheritanceAttribute(element, inheritance.UserFields, "InheritUserFields");
             AddInheritanceAttribute(element, inheritance.EnvironmentTags, "InheritEnvironmentTags");
             AddInheritanceAttribute(element, inheritance.Favorite, "InheritFavorite");
             AddInheritanceAttribute(element, inheritance.ExtApp, "InheritExtApp");

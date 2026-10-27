@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - added a warning when a connection's hostname is already used by another connection, listing where the existing ones are in the tree
 - changed connection tree search to filter the tree by default instead of jumping to the first match
 - #876: added Wake-on-LAN option to the connection tree context menu to wake sleeping or powered-off machines using the connection's MAC Address
+- #926: added support for custom user fields (name=value pairs) that can be passed into external applications using %name%
 - #3449: added Single Package Authoring (SPA) to MSI installer to allow per-user installations without admin privileges
 - #2931: added vault openbao connector
 - #2900: added "Report a Bug" menu item to Help menu and update bug report URL to GitHub issues 

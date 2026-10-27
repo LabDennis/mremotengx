@@ -104,6 +104,7 @@ namespace mRemoteNG.Connection
         private string _macAddress;
         private string _openingCommand;
         private string _userField;
+        private string _userFields = "";
         private string _environmentTags = "";
         private string _rdpStartProgram;
         private string _rdpStartProgramWorkDir;
@@ -962,6 +963,15 @@ namespace mRemoteNG.Connection
         {
             get => GetPropertyValue("UserField", _userField);
             set => SetField(ref _userField, value, "UserField");
+        }
+
+        [LocalizedAttributes.LocalizedCategory(nameof(Language.Miscellaneous), 7),
+         LocalizedAttributes.LocalizedDisplayName(nameof(Language.UserFields)),
+         LocalizedAttributes.LocalizedDescription(nameof(Language.PropertyDescriptionUserFields))]
+        public virtual string UserFields
+        {
+            get => GetPropertyValue("UserFields", _userFields);
+            set => SetField(ref _userFields, value, "UserFields");
         }
 
         [LocalizedAttributes.LocalizedCategory(nameof(Language.Miscellaneous), 7),

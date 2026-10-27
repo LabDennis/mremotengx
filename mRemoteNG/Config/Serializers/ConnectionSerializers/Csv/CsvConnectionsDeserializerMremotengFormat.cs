@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
 using mRemoteNG.Connection;
 using mRemoteNG.Connection.Protocol;
 using mRemoteNG.Connection.Protocol.Http;
@@ -96,6 +97,46 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
             }
 
             return root;
+        }
+
+        private static string[] SplitCsvLine(string line, int quotedFieldIndex)
+        {
+            List<string> fields = new();
+            StringBuilder field = new();
+            bool inQuotes = false;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                char character = line[i];
+                if (inQuotes && character == '"')
+                {
+                    if (i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        field.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else if (!inQuotes && character == '"' && fields.Count == quotedFieldIndex && field.Length == 0)
+                {
+                    inQuotes = true;
+                }
+                else if (character == ';' && !inQuotes)
+                {
+                    fields.Add(field.ToString());
+                    field.Clear();
+                }
+                else
+                {
+                    field.Append(character);
+                }
+            }
+
+            fields.Add(field.ToString());
+            return fields.ToArray();
         }
 
         private ConnectionInfo ParseConnectionInfo(IList<string> headers, string[] connectionCsv)
@@ -193,6 +234,11 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
             connectionRecord.UserField =
                 headers.Contains("UserField")
                 ? connectionCsv[headers.IndexOf("UserField")]
+                : "";
+
+            connectionRecord.UserFields =
+                headers.Contains("UserFields")
+                ? connectionCsv[headers.IndexOf("UserFields")]
                 : "";
 
             connectionRecord.EnvironmentTags =
@@ -834,6 +880,12 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
             {
                 if (bool.TryParse(connectionCsv[headers.IndexOf("InheritUserField")], out bool value))
                     connectionRecord.Inheritance.UserField = value;
+            }
+
+            if (headers.Contains("InheritUserFields"))
+            {
+                if (bool.TryParse(connectionCsv[headers.IndexOf("InheritUserFields")], out bool value))
+                    connectionRecord.Inheritance.UserFields = value;
             }
 
             if (headers.Contains("InheritEnvironmentTags"))
