@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -128,12 +128,12 @@ namespace mRemoteNG.Config.Connections
                 }
                 else
                 {
-                    strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", Runtime.EncryptionKey);
+                    strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", new RootNodeInfo(RootNodeType.Connection).DefaultPassword.ConvertToSecureString());
                 }
             }
             else
             {
-                strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", Runtime.EncryptionKey);
+                strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", new RootNodeInfo(RootNodeType.Connection).DefaultPassword.ConvertToSecureString());
             }
 
             System.Data.Common.DbCommand dbQuery = databaseConnector.DbCommand("TRUNCATE TABLE tblRoot");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using mRemoteNG.App;
 using mRemoteNG.Credential;
 using mRemoteNG.Resources.Language;
+using mRemoteNG.UI.Forms;
 
 namespace mRemoteNG.UI.Menu
 {
@@ -15,6 +16,7 @@ namespace mRemoteNG.UI.Menu
         private ToolStripMenuItem _mMenToolsExternalApps;
         private ToolStripMenuItem _mMenToolsUvncsc;
         private readonly List<ToolStripMenuItem> _pluginMenuItems = [];
+        private ToolStripMenuItem _mMenToolsMasterPassword;
 
         public Form MainForm { get; set; }
         public ICredentialRepositoryList CredentialProviderCatalog { get; set; }
@@ -28,13 +30,16 @@ namespace mRemoteNG.UI.Menu
         {
             _mMenToolsUvncsc = new ToolStripMenuItem();
             _mMenToolsExternalApps = new ToolStripMenuItem();
+            _mMenToolsMasterPassword = new ToolStripMenuItem();
             // 
             // mMenTools
             // 
             DropDownItems.AddRange(new ToolStripItem[]
             {
                 _mMenToolsUvncsc,
-                _mMenToolsExternalApps
+                _mMenToolsExternalApps,
+                new ToolStripSeparator(),
+                _mMenToolsMasterPassword
             });
             Name = "mMenTools";
             Size = new System.Drawing.Size(48, 20);
@@ -56,12 +61,20 @@ namespace mRemoteNG.UI.Menu
             _mMenToolsExternalApps.Text = Language.ExternalTool;
             _mMenToolsExternalApps.Click += mMenToolsExternalApps_Click;
             // 
+            // mMenToolsMasterPassword
+            // 
+            _mMenToolsMasterPassword.Image = Properties.Resources.Key_16x;
+            _mMenToolsMasterPassword.Name = "mMenToolsMasterPassword";
+            _mMenToolsMasterPassword.Size = new System.Drawing.Size(184, 22);
+            _mMenToolsMasterPassword.Text = Language.AppMasterPassword;
+            _mMenToolsMasterPassword.Click += mMenToolsMasterPassword_Click;
         }
 
         public void ApplyLanguage()
         {
             Text = Language._Tools;
             _mMenToolsExternalApps.Text = Language.ExternalTool;
+            _mMenToolsMasterPassword.Text = Language.AppMasterPassword;
             RefreshPluginItems();
         }
 
@@ -109,6 +122,12 @@ namespace mRemoteNG.UI.Menu
         private void mMenToolsOptions_Click(object sender, EventArgs e)
         {
             AppWindows.Show(WindowType.Options);
+        }
+
+        private void mMenToolsMasterPassword_Click(object sender, EventArgs e)
+        {
+            using MasterPasswordManager masterPasswordManager = new();
+            masterPasswordManager.ShowDialog(MainForm);
         }
 
         #endregion

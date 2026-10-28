@@ -1,4 +1,4 @@
-﻿using mRemoteNG.App.Info;
+using mRemoteNG.App.Info;
 using mRemoteNG.Config.Putty;
 using mRemoteNG.Connection;
 using mRemoteNG.Credential;
@@ -14,6 +14,7 @@ using mRemoteNG.UI.TaskDialog;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Threading;
 using System.Windows.Forms;
@@ -53,9 +54,85 @@ namespace mRemoteNG.App
         public static ExternalToolsService ExternalToolsService { get; } = new ExternalToolsService();
         public static PluginService PluginService { get; } = new PluginService();
 
-        public static SecureString EncryptionKey { get; set; } = new RootNodeInfo(RootNodeType.Connection).PasswordString.ConvertToSecureString();
+        private static SecureString? _masterPasswordKey;
+        private static readonly object _encryptionKeyLock = new();
+        public static SecureString EncryptionKey { get; private set; } = CreateDefaultEncryptionKey();
+        public static bool HasActiveMasterPasswordSession => _masterPasswordKey != null;
 
         public static ICredentialRepositoryList CredentialProviderCatalog { get; } = new CredentialRepositoryList();
+
+        public static void SetEncryptionKey(SecureString key)
+        {
+            UpdateEncryptionKey(key.Copy(), syncLoadedRepositories: true);
+        }
+
+        public static void SetEncryptionKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                ResetEncryptionKey();
+                return;
+            }
+
+            using SecureString secureKey = key.ConvertToSecureString();
+            SetEncryptionKey(secureKey);
+        }
+
+        public static void ResetEncryptionKey()
+        {
+            UpdateEncryptionKey(_masterPasswordKey?.Copy() ?? CreateDefaultEncryptionKey(), syncLoadedRepositories: true);
+        }
+
+        public static void SetMasterPasswordSession(SecureString key)
+        {
+            _masterPasswordKey?.Dispose();
+            _masterPasswordKey = key.Copy();
+            UpdateEncryptionKey(_masterPasswordKey.Copy(), syncLoadedRepositories: true);
+        }
+
+        public static void ClearMasterPasswordSession()
+        {
+            _masterPasswordKey?.Dispose();
+            _masterPasswordKey = null;
+            UpdateEncryptionKey(CreateDefaultEncryptionKey(), syncLoadedRepositories: true);
+        }
+
+        private static SecureString CreateDefaultEncryptionKey()
+        {
+            return new RootNodeInfo(RootNodeType.Connection).PasswordString.ConvertToSecureString();
+        }
+        private static void UpdateEncryptionKey(SecureString newKey, bool syncLoadedRepositories)
+        {
+            SecureString? oldKey = null;
+            bool keyChanged;
+
+            lock (_encryptionKeyLock)
+            {
+                keyChanged = EncryptionKey.ConvertToUnsecureString() != newKey.ConvertToUnsecureString();
+                oldKey = EncryptionKey;
+                EncryptionKey = newKey;
+            }
+
+            oldKey?.Dispose();
+
+            if (syncLoadedRepositories && keyChanged)
+                SyncLoadedCredentialRepositoriesToEncryptionKey();
+        }
+
+        private static void SyncLoadedCredentialRepositoriesToEncryptionKey()
+        {
+            foreach (ICredentialRepository repository in CredentialProviderCatalog.CredentialProviders.Where(r => r.IsLoaded))
+            {
+                try
+                {
+                    repository.Config.Key = EncryptionKey.Copy();
+                }
+                catch (Exception ex)
+                {
+                    MessageCollector.AddExceptionMessage("Failed to synchronize credential repository encryption key", ex);
+                }
+            }
+        }
 
         public static ConnectionInitiator ConnectionInitiator { get; set; } = new ConnectionInitiator();
 

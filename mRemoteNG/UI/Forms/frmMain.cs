@@ -1,4 +1,4 @@
-﻿#region Usings
+#region Usings
 using Microsoft.Win32;
 using mRemoteNG.App;
 using mRemoteNG.App.Info;
@@ -455,6 +455,12 @@ namespace mRemoteNG.UI.Forms
             // Close the splash screen now that the main window is already visible, then
             // prompt for the profile password before the connection set is loaded.
             ProgramRoot.CloseSplash();
+            if (!StartupUnlockService.EnsureStartupUnlocked(this))
+            {
+                Application.Exit();
+                return;
+            }
+
             new CredsAndConsSetup().LoadCredsAndCons();
 
             PromptForUpdatesPreference();

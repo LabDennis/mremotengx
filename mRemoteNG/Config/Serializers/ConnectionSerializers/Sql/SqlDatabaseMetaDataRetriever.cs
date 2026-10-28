@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Globalization;
 using System.Runtime.Versioning;
@@ -85,12 +85,12 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
                 }
                 else
                 {
-                    strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", Runtime.EncryptionKey);
+                    strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", new RootNodeInfo(RootNodeType.Connection).DefaultPassword.ConvertToSecureString());
                 }
             }
             else
             {
-                strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", Runtime.EncryptionKey);
+                strProtected = cryptographyProvider.Encrypt("ThisIsNotProtected", new RootNodeInfo(RootNodeType.Connection).DefaultPassword.ConvertToSecureString());
             }
 
             DbCommand cmd = databaseConnector.DbCommand("TRUNCATE TABLE tblRoot");

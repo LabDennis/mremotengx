@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security;
 using System.Windows.Forms;
 using mRemoteNG.Security;
