@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -101,7 +102,10 @@ public sealed class ExternalBrowserProtocol : ProtocolBase, IVisualProtocol
 
     private static bool LaunchWithShell(string url)
     {
-        using var process = Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        // The shell opens any scheme with its registered handler, so only web URLs may reach it.
+        if (!WebUrlBuilder.TryParseWebUrl(url, out var uri))
+            throw new ArgumentException($"Only http and https URLs can be opened: {url}", nameof(url));
+        using var process = Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
         return true;
     }
 }
@@ -121,9 +125,12 @@ public static class WebUrlBuilder
         var defaultPort = scheme == Uri.UriSchemeHttps ? 443 : 80;
         var host = parameters.Hostname.Trim();
 
-        if (host.Contains("://", StringComparison.Ordinal)
-            && Uri.TryCreate(host, UriKind.Absolute, out var given))
+        if (host.Contains("://", StringComparison.Ordinal))
         {
+            if (!TryParseWebUrl(host, out var given))
+                throw new ArgumentException(
+                    $"The hostname of an HTTP/HTTPS connection must be a valid http or https URL: {host}",
+                    nameof(parameters));
             var builder = new UriBuilder(given);
             // A port written in the URL wins; otherwise use the connection's port unless it is just the default.
             if (given.IsDefaultPort && parameters.Port > 0 && parameters.Port != defaultPort)
@@ -159,6 +166,21 @@ public static class WebUrlBuilder
         var portPart = port > 0 && port != defaultPort ? $":{port}" : "";
         return $"{scheme}://{hostPart}{portPart}{path}";
     }
+
+    /// <summary>True when <paramref name="url"/> is an absolute http or https URL.</summary>
+    public static bool TryParseWebUrl(string? url, [NotNullWhen(true)] out Uri? uri)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var parsed) && IsWebScheme(parsed))
+        {
+            uri = parsed;
+            return true;
+        }
+        uri = null;
+        return false;
+    }
+
+    private static bool IsWebScheme(Uri uri) =>
+        uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
 }
 
 /// <summary>Session tab content: where the page was opened, with Reopen / Copy URL actions.</summary>
