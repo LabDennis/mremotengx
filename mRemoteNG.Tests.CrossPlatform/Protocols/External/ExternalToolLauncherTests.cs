@@ -42,6 +42,41 @@ public sealed class ExternalToolLauncherTests : IDisposable
     }
 
     [Fact]
+    public void Windows_Program_GetsArgumentsEscapedByCommandLineToArgvWRules()
+    {
+        var tool = new ExternalTool("t", @"C:\Tools\plink.exe", "-ssh \"%HOSTNAME%\"");
+
+        var psi = _launcher.BuildStartInfo(tool, Vars("x\" -proxycmd \"calc.exe\" \""), ExternalToolPlatform.Windows, allowElevation: true);
+
+        psi.UseShellExecute.Should().BeFalse();
+        Core.Tools.ExternalToolArgumentParserTests.SplitLikeCommandLineToArgvW(psi.Arguments)
+            .Should().Equal("-ssh", "x\" -proxycmd \"calc.exe\" \"");
+    }
+
+    [Fact]
+    public void Windows_ElevatedProgram_GetsArgumentsEscapedByCommandLineToArgvWRules()
+    {
+        var tool = new ExternalTool("t", "putty.exe", "-pw \"%PASSWORD%\"", runElevated: true);
+
+        var psi = _launcher.BuildStartInfo(tool, Vars(password: "a\" -evil \""), ExternalToolPlatform.Windows, allowElevation: true);
+
+        psi.Verb.Should().Be("runas");
+        Core.Tools.ExternalToolArgumentParserTests.SplitLikeCommandLineToArgvW(psi.Arguments).Should().Equal("-pw", "a\" -evil \"");
+    }
+
+    [Theory]
+    [InlineData("cmd", true)]
+    [InlineData("CMD.EXE", true)]
+    [InlineData(@"C:\Windows\System32\cmd.exe", true)]
+    [InlineData(@"""C:\scripts\run.bat""", true)]
+    [InlineData(@"C:\scripts\run.cmd", true)]
+    [InlineData(@"C:\Tools\plink.exe", false)]
+    [InlineData("cmdx.exe", false)]
+    [InlineData("powershell", false)]
+    public void RunsThroughCmd(string fileName, bool expected) =>
+        ExternalToolLauncher.RunsThroughCmd(fileName).Should().Be(expected);
+
+    [Fact]
     public void Windows_Elevated_UsesRunAs()
     {
         var tool = new ExternalTool("t", "regedit.exe", "/s x", runElevated: true);

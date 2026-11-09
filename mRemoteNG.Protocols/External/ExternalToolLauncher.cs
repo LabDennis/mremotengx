@@ -13,8 +13,9 @@ public sealed class ExternalToolException(string message, Exception? innerExcept
 
 /// <summary>
 /// Starts <see cref="ExternalTool"/>s on every OS: substitutes the connection variables, splits the arguments
-/// (<see cref="CommandLineTokenizer"/> on Linux/macOS; on Windows the command line is passed through, as the legacy
-/// escaping rules expect), opens documents/URLs with the desktop's default handler and elevates when asked
+/// (<see cref="CommandLineTokenizer"/> on Linux/macOS; on Windows the command line is passed through, escaped with the
+/// legacy cmd.exe rules for cmd and batch files and by the <c>CommandLineToArgvW</c> rules for other programs),
+/// opens documents/URLs with the desktop's default handler and elevates when asked
 /// (Windows "runas" verb, <c>pkexec</c> on Linux, an administrator prompt via <c>osascript</c> on macOS).
 /// </summary>
 public sealed class ExternalToolLauncher
@@ -48,7 +49,10 @@ public sealed class ExternalToolLauncher
         if (fileName.AsSpan().IndexOfAny('\0', '\r', '\n') >= 0)
             throw new ExternalToolException($"The file name of \"{tool.DisplayName}\" contains a control character.");
 
-        string arguments = parser.ParseArguments(tool.Arguments);
+        var argumentParser = os == ExternalToolPlatform.Windows && !RunsThroughCmd(fileName)
+            ? new ExternalToolArgumentParser(variables, ArgumentEscapingStyle.WindowsProgram)
+            : parser;
+        string arguments = argumentParser.ParseArguments(tool.Arguments);
         string workingDir = ExpandHome(parser.ParseArguments(tool.WorkingDir).Trim(), os);
         if (workingDir.Length > 0 && !Directory.Exists(workingDir))
             throw new ExternalToolException($"The working directory \"{workingDir}\" of \"{tool.DisplayName}\" does not exist.");
@@ -157,6 +161,17 @@ public sealed class ExternalToolLauncher
             return (File.GetUnixFileMode(fileName) & anyExecute) == 0;
         }
         return false;
+    }
+
+    /// <summary>True when Windows hands the command line to cmd.exe: cmd itself or a batch file.</summary>
+    internal static bool RunsThroughCmd(string fileName)
+    {
+        string name = fileName.Trim().Trim('"');
+        name = name[(name.LastIndexOfAny(['\\', '/']) + 1)..];
+        return name.Equals("cmd", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("cmd.exe", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".bat", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".cmd", StringComparison.OrdinalIgnoreCase);
     }
 
     // ── Elevated start ─────────────────────────────────────────────────────

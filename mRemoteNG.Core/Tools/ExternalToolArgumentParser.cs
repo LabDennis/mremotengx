@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace mRemoteNG.Core.Tools;
@@ -10,6 +11,14 @@ public enum ArgumentEscapingStyle
     /// rules) and cmd.exe metacharacters with <c>^</c>; <c>%-VAR%</c> only the metacharacters; <c>%!VAR%</c> nothing.
     /// </summary>
     WindowsShell,
+
+    /// <summary>
+    /// For Windows programs started directly (no cmd.exe), whose command line is split by the
+    /// <c>CommandLineToArgvW</c>/MSVCRT rules: <c>%VAR%</c> and <c>%-VAR%</c> values stay literal text (quotes become
+    /// <c>\"</c> and the backslashes before a quote are doubled, no <c>^</c>), so a value cannot end a quoted argument;
+    /// <c>%!VAR%</c> inserts the value as-is (it may then add arguments).
+    /// </summary>
+    WindowsProgram,
 
     /// <summary>
     /// For <see cref="CommandLineTokenizer"/> (Linux/macOS, where no shell is involved): <c>%VAR%</c> and
@@ -53,7 +62,9 @@ public sealed class ExternalToolArgumentParser
         if (string.IsNullOrEmpty(input))
             return input ?? string.Empty;
         var replacements = BuildReplacementList(input);
-        return PerformReplacements(input, replacements);
+        return _style == ArgumentEscapingStyle.WindowsProgram
+            ? BuildProgramCommandLine(input, replacements)
+            : PerformReplacements(input, replacements);
     }
 
     private List<Replacement> BuildReplacementList(string input)
@@ -141,8 +152,10 @@ public sealed class ExternalToolArgumentParser
             if (haveReplacement)
             {
                 char trailing = tokenEnd + 2 <= input.Length ? input[tokenEnd + 1] : '\0';
-                replacementValue = Escape(replacementValue!, escape, trailing);
-                replacements.Add(new Replacement(tokenStart, tokenLength, replacementValue));
+                bool literal = _style == ArgumentEscapingStyle.WindowsProgram && escape != EscapeType.None;
+                if (_style != ArgumentEscapingStyle.WindowsProgram)
+                    replacementValue = Escape(replacementValue!, escape, trailing);
+                replacements.Add(new Replacement(tokenStart, tokenLength, replacementValue!, literal));
                 index = tokenEnd + 1;
             }
             else
@@ -202,6 +215,61 @@ public sealed class ExternalToolArgumentParser
         return result;
     }
 
+    /// <summary>
+    /// Substitutes the values and escapes them by the <c>CommandLineToArgvW</c> rules: a quote from a value becomes
+    /// <c>\"</c>; a run of backslashes before a quote is doubled where it comes from a value, and entirely when the
+    /// quote comes from a value, so value text is always read literally and the template's quotes keep their meaning.
+    /// </summary>
+    private static string BuildProgramCommandLine(string input, List<Replacement> replacements)
+    {
+        var text = new StringBuilder(input.Length);
+        var literal = new List<bool>(input.Length);
+        void Append(ReadOnlySpan<char> part, bool isLiteral)
+        {
+            text.Append(part);
+            for (int i = 0; i < part.Length; i++)
+                literal.Add(isLiteral);
+        }
+
+        int position = 0;
+        foreach (var replacement in replacements.OrderBy(r => r.Start))
+        {
+            Append(input.AsSpan(position, replacement.Start - position), false);
+            Append(replacement.Value, replacement.IsLiteral);
+            position = replacement.Start + replacement.Length;
+        }
+        Append(input.AsSpan(position), false);
+
+        var result = new StringBuilder(text.Length);
+        int index = 0;
+        while (index < text.Length)
+        {
+            char c = text[index];
+            if (c == '"')
+            {
+                result.Append(literal[index] ? "\\\"" : "\"");
+                index++;
+                continue;
+            }
+            if (c != '\\')
+            {
+                result.Append(c);
+                index++;
+                continue;
+            }
+
+            int runStart = index;
+            while (index < text.Length && text[index] == '\\')
+                index++;
+            bool beforeQuote = index < text.Length && text[index] == '"';
+            bool literalQuote = beforeQuote && literal[index];
+            for (int i = runStart; i < index; i++)
+                result.Append(beforeQuote && (literalQuote || literal[i]) ? "\\\\" : "\\");
+        }
+
+        return result.ToString();
+    }
+
     /// <summary>A run of backslashes followed by a double quote: double the backslashes and escape the quote.</summary>
     public static string EscapeBackslashes(string argument) =>
         string.IsNullOrEmpty(argument) ? argument : Regex.Replace(argument, "(\\\\*)\"", "$1$1\\\"");
@@ -225,5 +293,5 @@ public sealed class ExternalToolArgumentParser
         None,
     }
 
-    private readonly record struct Replacement(int Start, int Length, string Value);
+    private readonly record struct Replacement(int Start, int Length, string Value, bool IsLiteral = false);
 }
