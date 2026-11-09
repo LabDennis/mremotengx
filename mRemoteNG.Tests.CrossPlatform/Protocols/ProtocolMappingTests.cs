@@ -163,6 +163,7 @@ public class ProtocolMappingTests
     [InlineData(ProtocolType.Http, "https://site.example/path", 80, "https://site.example/path")]
     [InlineData(ProtocolType.Https, "https://site.example:8443/", 443, "https://site.example:8443/")]
     [InlineData(ProtocolType.Https, "https://site.example/", 8443, "https://site.example:8443/")]
+    [InlineData(ProtocolType.Http, "intranet/login?next=https://portal.example", 80, "http://intranet/login?next=https://portal.example")]
     public void WebUrlBuilder_BuildsUrl(ProtocolType protocol, string host, int port, string expected)
     {
         var p = new ConnectionParameters { Hostname = host, Port = port, Protocol = protocol };

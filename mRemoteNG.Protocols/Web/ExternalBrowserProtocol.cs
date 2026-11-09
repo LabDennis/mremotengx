@@ -125,7 +125,7 @@ public static class WebUrlBuilder
         var defaultPort = scheme == Uri.UriSchemeHttps ? 443 : 80;
         var host = parameters.Hostname.Trim();
 
-        if (host.Contains("://", StringComparison.Ordinal))
+        if (NamesScheme(host))
         {
             if (!TryParseWebUrl(host, out var given))
                 throw new ArgumentException(
@@ -177,6 +177,18 @@ public static class WebUrlBuilder
         }
         uri = null;
         return false;
+    }
+
+    /// <summary>
+    /// True when the hostname is written as a URL: it starts with "scheme://" or otherwise parses as an absolute URI
+    /// (e.g. a UNC path). A "://" that only appears later, as in "intranet/login?next=https://portal", is not a scheme.
+    /// </summary>
+    private static bool NamesScheme(string host)
+    {
+        var separator = host.IndexOf("://", StringComparison.Ordinal);
+        if (separator < 0) return false;
+        return (separator > 0 && Uri.CheckSchemeName(host[..separator]))
+               || Uri.TryCreate(host, UriKind.Absolute, out _);
     }
 
     private static bool IsWebScheme(Uri uri) =>
