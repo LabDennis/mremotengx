@@ -34,6 +34,7 @@ namespace mRemoteNG.UI.Controls
         {
             InitializeComponent();
             SetupObjectListView();
+            Themes.ThemeApplier.Hook(this);
         }
 
         public void RefreshObjects()

@@ -50,6 +50,7 @@ namespace mRemoteNG.UI.Controls
             olvColumnRepositorySource.AspectGetter = CredentialSourceAspectGetter;
             olvColumnRepositoryTitle.AspectGetter = RepoTitleAspectGetter;
             objectListView1.SelectionChanged += (sender, args) => RaiseSelectionChangedEvent();
+            Themes.ThemeApplier.Hook(this);
             objectListView1.CellClick += RaiseCellClickEvent;
             ApplyLanguage();
         }

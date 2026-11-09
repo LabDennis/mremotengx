@@ -14,6 +14,7 @@ namespace mRemoteNG.UI.Controls
         public MrngAdTree()
         {
             InitializeComponent();
+            Themes.ThemeApplier.Hook(this);
         }
 
         public event AdPathChangedEventHandler AdPathChanged;

@@ -44,6 +44,7 @@ namespace mRemoteNG.UI.Controls.FilteredPropertyGrid
         {
             InitializeComponent();
             base.SelectedObject = _mWrapper;
+            Themes.ThemeApplier.Hook(this);
         }
 
         /// <summary>

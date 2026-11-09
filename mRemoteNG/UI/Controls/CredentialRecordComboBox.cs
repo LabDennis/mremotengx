@@ -12,6 +12,7 @@ namespace mRemoteNG.UI.Controls
         {
             InitializeComponent();
             PopulateItems(CredentialRecords);
+            Themes.ThemeApplier.Hook(this);
         }
 
         private void PopulateItems(IEnumerable<ICredentialRecord> credentialRecords)
