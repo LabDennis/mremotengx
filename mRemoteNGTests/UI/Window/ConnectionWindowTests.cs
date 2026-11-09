@@ -2,8 +2,11 @@
 using System.Threading;
 using System.Windows.Forms;
 using mRemoteNG.Connection;
+using mRemoteNG.Connection.Protocol;
 using mRemoteNG.Themes;
+using mRemoteNG.UI.Tabs;
 using mRemoteNG.UI.Window;
+using NSubstitute;
 using NUnit.Framework;
 using WeifenLuo.WinFormsUI.Docking;
 using WeifenLuo.WinFormsUI.ThemeVS2015;
@@ -94,6 +97,28 @@ namespace mRemoteNGTests.UI.Window
             Application.DoEvents();
 
             Assert.That(_connectionWindow.OpenConnectionCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void ReconnectAll_WithATabWhoseProtocolHasNotAttached_ReconnectsOnlyTheAttachedTabs()
+        {
+            var connectedInfo = new ConnectionInfo { Name = "Connected" };
+            ConnectionTab connectedTab = _connectionWindow.AddConnectionTab(connectedInfo);
+            ProtocolBase connectedProtocol = Substitute.For<ProtocolBase>();
+            // As ProtocolBase.Initialize does once the protocol is up.
+            connectedTab.Tag = new InterfaceControl(connectedTab, connectedProtocol, connectedInfo);
+
+            // AddConnectionTab leaves the ConnectionInfo in Tag until the protocol attaches; this
+            // tab is still connecting, or its protocol could not be created.
+            _connectionWindow.AddConnectionTab(new ConnectionInfo { Name = "Still connecting" });
+
+            IConnectionInitiator initiator = Substitute.For<IConnectionInitiator>();
+
+            _connectionWindow.ReconnectAll(initiator);
+
+            connectedProtocol.Received(1).Close();
+            initiator.Received(1).OpenConnection(connectedInfo, ConnectionInfo.Force.DoNotJump);
+            initiator.ReceivedWithAnyArgs(1).OpenConnection(default(ConnectionInfo));
         }
     }
 }
