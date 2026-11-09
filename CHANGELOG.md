@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [1.78.2]
 ### Fixed
 <<<<<<< HEAD
+<<<<<<< HEAD
 - fixed app hanging on exit when PuTTY never read the password pipe; the pipe now times out and its name is no longer guessable
 - fixed RDP sessions always being treated as a 56 Kbps modem link; the client now auto-detects bandwidth
 - fixed random string generator never picking the last character of its pool
@@ -14,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - fixed the AllowExportUsernames and AllowExportPasswords registry settings not being enforced in the export dialog and CSV export, including VNC proxy and RD Gateway credentials
 - fixed clipboard sharing being turned off for every RDP connection loaded from a connection file saved by 1.76 or earlier (format 2.6 and older)
 - #3247: fixed the rename box in the connection tree being shifted and showing the old name behind it
+- fixed RDP sessions in a floating panel not resizing to fit when the panel window is resized, maximized or restored
 - fixed the new password dialog accepting an empty, too short or mismatched password when clicking OK
 - #2154: fixed "Alert on Idle Disconnect" and "Disable Cursor Blinking" showing the labels of other RDP properties in the Config panel
 - fixed connection tree search bar ignoring the "place search bar above connection tree" setting at startup
