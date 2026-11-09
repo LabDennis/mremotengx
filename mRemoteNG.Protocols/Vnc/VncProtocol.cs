@@ -144,6 +144,7 @@ public sealed class VncProtocol : ProtocolBase, IVisualProtocol, ISpecialKeysPro
                 SecurityTypes = Settings.SecurityTypes,
                 TlsTargetHost = parameters.Hostname,
                 ValidateServerCertificate = CertificateValidator(parameters.Hostname, parameters.Port),
+                AllowCleartextPassword = Settings.AllowCleartextPassword,
             };
             RfbClient client;
             try
@@ -166,6 +167,7 @@ public sealed class VncProtocol : ProtocolBase, IVisualProtocol, ISpecialKeysPro
                     SecurityTypes = options.SecurityTypes.Where(t => t != RfbSecurityType.VeNCrypt).ToList(),
                     TlsTargetHost = options.TlsTargetHost,
                     ValidateServerCertificate = options.ValidateServerCertificate,
+                    AllowCleartextPassword = options.AllowCleartextPassword,
                 };
                 client = await RfbClient.ConnectAsync(_tcp.GetStream(), options, timeout.Token).ConfigureAwait(false);
             }
