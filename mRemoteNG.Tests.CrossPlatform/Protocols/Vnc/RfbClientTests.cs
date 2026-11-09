@@ -400,6 +400,39 @@ public sealed class RfbClientTests : IAsyncLifetime
         (await _server.ReceiveAsync(10)).Should().Equal(3, 0, 0, 0, 0, 0, 0, 16, 0, 9);
     }
 
+    [Theory]
+    [InlineData(RfbEncoding.DesktopSize)]
+    [InlineData(RfbEncoding.ExtendedDesktopSize)]
+    public async Task OversizedDesktopResize_EndsSessionWithProtocolError(int encoding)
+    {
+        var client = await ConnectNoneAsync(4, 2);
+        var disconnected = new TaskCompletionSource<Exception?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.Disconnected += (_, error) => disconnected.TrySetResult(error);
+        client.Start();
+        await _server.ReceiveAsync(10);
+
+        var update = new RfbBytes().U8(0).U8(0).U16(1).Rect(0, 0, 65535, 65535, encoding);
+        if (encoding == RfbEncoding.ExtendedDesktopSize) update.U8(1).U8(0).U8(0).U8(0).Raw(new byte[16]);
+        await _server.SendAsync(update);
+
+        (await disconnected.Task.WaitAsync(Timeout)).Should().BeOfType<RfbProtocolException>();
+        client.Framebuffer.Width.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task RectanglePastDesktop_EndsSessionWithProtocolError()
+    {
+        var client = await ConnectNoneAsync(4, 2);
+        var disconnected = new TaskCompletionSource<Exception?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.Disconnected += (_, error) => disconnected.TrySetResult(error);
+        client.Start();
+        await _server.ReceiveAsync(10);
+
+        await _server.SendAsync(new RfbBytes().U8(0).U8(0).U16(1).Rect(3, 0, 2, 1, RfbEncoding.Raw).Pixel(0).Pixel(0));
+
+        (await disconnected.Task.WaitAsync(Timeout)).Should().BeOfType<RfbProtocolException>();
+    }
+
     [Fact]
     public async Task CursorPseudoEncoding_RaisesCursorWithTransparency()
     {

@@ -28,12 +28,16 @@ public readonly record struct RfbRect(int X, int Y, int Width, int Height)
 /// </summary>
 public sealed class Framebuffer
 {
+    /// <summary>Largest width or height accepted from a server, which bounds the pixel array at 1 GiB.</summary>
+    public const int MaxDimension = 16384;
+
     private readonly object _dirtyLock = new();
     private RfbRect _dirty;
     private volatile PixelBuffer _buffer;
 
     public Framebuffer(int width, int height)
     {
+        ValidateSize(width, height);
         _buffer = new PixelBuffer(width, height);
         _dirty = new RfbRect(0, 0, width, height);
     }
@@ -51,9 +55,11 @@ public sealed class Framebuffer
     /// Reallocates the framebuffer (contents become black) and marks it entirely dirty.
     /// Returns false, changing nothing, when the size is unchanged.
     /// </summary>
+    /// <exception cref="RfbProtocolException">A dimension is negative or larger than <see cref="MaxDimension"/>.</exception>
     public bool Resize(int width, int height)
     {
         if (width == Width && height == Height) return false;
+        ValidateSize(width, height);
         var buffer = new PixelBuffer(width, height);
         lock (_dirtyLock)
         {
@@ -61,6 +67,13 @@ public sealed class Framebuffer
             _dirty = new RfbRect(0, 0, width, height);
         }
         return true;
+    }
+
+    private static void ValidateSize(int width, int height)
+    {
+        if (width is < 0 or > MaxDimension || height is < 0 or > MaxDimension)
+            throw new RfbProtocolException(
+                $"The server requested a {width}×{height} desktop; at most {MaxDimension}×{MaxDimension} is supported.");
     }
 
     public void MarkDirty(RfbRect rect)

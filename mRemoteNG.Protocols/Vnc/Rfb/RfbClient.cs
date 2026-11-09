@@ -762,6 +762,9 @@ public sealed class RfbClient : IDisposable
 
             if (_decoders.TryGetValue(encoding, out var decoder))
             {
+                if (rect.Right > Framebuffer.Width || rect.Bottom > Framebuffer.Height)
+                    throw new RfbProtocolException(
+                        $"The server sent a {rect.Width}×{rect.Height} rectangle at ({rect.X}, {rect.Y}) that extends past the {Framebuffer.Width}×{Framebuffer.Height} desktop.");
                 decoder.Decode(_reader, Framebuffer, rect);
                 Framebuffer.MarkDirty(rect);
                 continue;

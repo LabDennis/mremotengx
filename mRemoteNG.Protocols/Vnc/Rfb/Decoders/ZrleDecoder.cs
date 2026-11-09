@@ -21,7 +21,7 @@ internal sealed class ZrleDecoder(PixelConverter? converter = null) : IRectangle
     {
         var length = reader.ReadUInt32();
         _inflater.Append(reader, (int)Math.Min(length, int.MaxValue));
-        _dataLength = _inflater.ReadAll(ref _data);
+        _dataLength = _inflater.ReadAll(ref _data, MaxDataLength(rect));
         _pos = 0;
 
         for (var ty = rect.Y; ty < rect.Bottom; ty += TileSize)
@@ -34,6 +34,19 @@ internal sealed class ZrleDecoder(PixelConverter? converter = null) : IRectangle
                 framebuffer.Write(tx, ty, tw, th, _tile.AsSpan(0, tw * th));
             }
         }
+    }
+
+    /// <summary>
+    /// The most bytes a valid rectangle can inflate to: every tile may carry a sub-encoding byte and a 127-colour
+    /// palette, and no pixel needs more than a CPIXEL plus one run or index byte.
+    /// </summary>
+    private int MaxDataLength(RfbRect rect)
+    {
+        if (rect.IsEmpty) return 0;
+        var cpixel = _converter.CompactBytesPerPixel;
+        var tiles = (long)((rect.Width + TileSize - 1) / TileSize) * ((rect.Height + TileSize - 1) / TileSize);
+        var max = tiles * (1 + 127L * cpixel) + (long)rect.Width * rect.Height * (cpixel + 1);
+        return (int)Math.Min(max, Array.MaxLength);
     }
 
     private void DecodeTile(Span<uint> tile, int tw, int th)

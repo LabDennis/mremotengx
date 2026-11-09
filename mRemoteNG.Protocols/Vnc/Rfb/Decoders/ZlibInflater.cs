@@ -12,15 +12,22 @@ internal sealed class ZlibInflater : IDisposable
     private const int MaxCompressedLength = 64 * 1024 * 1024;
 
     private readonly ContinuousInputStream _input = new();
+    private readonly int _maxPendingLength;
     private ZLibStream _inflater;
 
-    public ZlibInflater() => _inflater = new ZLibStream(_input, CompressionMode.Decompress);
+    /// <param name="maxPendingLength">Most compressed bytes that may be buffered but not yet inflated.</param>
+    public ZlibInflater(int maxPendingLength = MaxCompressedLength)
+    {
+        _maxPendingLength = maxPendingLength;
+        _inflater = new ZLibStream(_input, CompressionMode.Decompress);
+    }
 
     /// <summary>Reads <paramref name="count"/> compressed bytes from the connection into the stream's input.</summary>
     public void Append(RfbReader reader, int count)
     {
-        if (count is < 0 or > MaxCompressedLength)
-            throw new RfbProtocolException($"Compressed block of {count} bytes is implausibly large.");
+        if (count < 0 || count > _maxPendingLength - _input.Pending)
+            throw new RfbProtocolException(
+                $"Compressed block of {count} bytes (with {_input.Pending} bytes still unread) is implausibly large.");
         _input.Append(reader, count);
     }
 
@@ -39,15 +46,29 @@ internal sealed class ZlibInflater : IDisposable
         }
     }
 
-    /// <summary>Inflates everything available, growing <paramref name="data"/> as needed; returns the length.</summary>
-    public int ReadAll(ref byte[] data)
+    /// <summary>
+    /// Inflates everything available, growing <paramref name="data"/> as needed; returns the length.
+    /// Throws if the data inflates to more than <paramref name="maxLength"/> bytes.
+    /// </summary>
+    public int ReadAll(ref byte[] data, int maxLength)
     {
+        Span<byte> probe = stackalloc byte[1];
         var length = 0;
         while (true)
         {
-            if (length == data.Length)
-                Array.Resize(ref data, data.Length * 2);
-            var read = _inflater.Read(data, length, data.Length - length);
+            var limit = Math.Min(data.Length, maxLength);
+            if (length == limit)
+            {
+                if (length == maxLength)
+                {
+                    if (_inflater.Read(probe) > 0)
+                        throw new RfbProtocolException($"Compressed data inflates to more than {maxLength} bytes.");
+                    return length;
+                }
+                Array.Resize(ref data, (int)Math.Min(Math.Max(data.Length * 2L, 4096), maxLength));
+                limit = data.Length;
+            }
+            var read = _inflater.Read(data, length, limit - length);
             if (read <= 0) return length;
             length += read;
         }
@@ -72,6 +93,8 @@ internal sealed class ZlibInflater : IDisposable
         private byte[] _buffer = new byte[64 * 1024];
         private int _start;
         private int _end;
+
+        public int Pending => _end - _start;
 
         public void Append(RfbReader reader, int count)
         {
