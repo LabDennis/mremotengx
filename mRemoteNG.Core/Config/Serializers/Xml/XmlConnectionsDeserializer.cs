@@ -288,7 +288,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             node.UseRestrictedAdmin = GetBool(e, "UseRestrictedAdmin", false);
             node.UseRCG = GetBool(e, "UseRCG", false);
             node.UseRedirectionServerName = GetBool(e, "UseRedirectionServerName", false);
-            node.RDPAuthenticationLevel = GetEnum(e, "RDPAuthenticationLevel", AuthenticationLevel.NoAuth);
+            node.RDPAuthenticationLevel = GetEnum(e, "RDPAuthenticationLevel", AuthenticationLevel.WarnOnFailedAuth);
             node.RDPMinutesToIdleTimeout = GetInt(e, "RDPMinutesToIdleTimeout", 0);
             node.RDPAlertIdleTimeout = GetBool(e, "RDPAlertIdleTimeout", false);
             node.LoadBalanceInfo = GetAttr(e, "LoadBalanceInfo", "");

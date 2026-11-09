@@ -1,5 +1,6 @@
 using Avalonia;
 using FluentAssertions;
+using mRemoteNG.Core.Config.Serializers.Misc;
 using mRemoteNG.Core.Connection;
 using mRemoteNG.Core.Connection.Protocol.RDP;
 using mRemoteNG.Protocols.Abstractions;
@@ -483,6 +484,44 @@ public class FreeRdpLegacySettingsTests
         info.RDPAuthenticationLevel = level;
 
         ArgsFor(info).Should().Contain(expected);
+    }
+
+    [Fact]
+    public void UnknownAuthenticationLevel_StillChecksCertificate()
+    {
+        var info = Rdp();
+        info.RDPAuthenticationLevel = (AuthenticationLevel)99;
+
+        ArgsFor(info).Should().Contain("/cert:tofu").And.NotContain("/cert:ignore");
+    }
+
+    [Fact]
+    public void NewConnection_ChecksCertificateByDefault()
+    {
+        var info = ConnectionDefaults.ApplyNewConnectionDefaults(new ConnectionInfo
+        {
+            Protocol = CoreProtocol.RDP,
+            Hostname = "srv",
+        });
+
+        ArgsFor(info).Should().Contain("/cert:tofu").And.NotContain("/cert:ignore");
+    }
+
+    [Fact]
+    public void BareConnectionInfo_ChecksCertificateByDefault()
+    {
+        var info = new ConnectionInfo { Protocol = CoreProtocol.RDP, Hostname = "srv" };
+
+        ArgsFor(info).Should().Contain("/cert:tofu").And.NotContain("/cert:ignore");
+    }
+
+    [Fact]
+    public void ImportedConnection_ChecksCertificateByDefault()
+    {
+        var info = ImportNodeFactory.NewConnection(CoreProtocol.RDP);
+        info.Hostname = "srv";
+
+        ArgsFor(info).Should().Contain("/cert:tofu").And.NotContain("/cert:ignore");
     }
 
     [Fact]

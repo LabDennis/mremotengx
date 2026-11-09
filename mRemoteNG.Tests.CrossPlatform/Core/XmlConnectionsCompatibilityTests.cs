@@ -220,6 +220,23 @@ public class XmlConnectionsCompatibilityTests : IDisposable
     }
 
     [Fact]
+    public void MissingRdpAuthenticationLevel_DefaultsToWarnOnFailedAuth()
+    {
+        var path = Path.Combine(_tempDir, "no-auth-level.xml");
+        File.WriteAllText(path, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Connections Name="Connections" ConfVersion="2.6">
+              <Node Name="Server" Type="Connection" Hostname="host.example" Protocol="RDP" Port="3389" Id="0f3c2b1a-1d2e-4f5a-8b9c-7d6e5f4a3b21" />
+            </Connections>
+            """);
+
+        var tree = new ConnectionsService(new CryptoProviderFactory()).LoadFromFile(path);
+
+        tree.RootNode.Children.Should().ContainSingle().Subject
+            .RDPAuthenticationLevel.Should().Be(mRemoteNG.Core.Connection.Protocol.RDP.AuthenticationLevel.WarnOnFailedAuth);
+    }
+
+    [Fact]
     public void NewMasterPassword_IsRequiredAfterSave()
     {
         var service = new ConnectionsService(new CryptoProviderFactory());

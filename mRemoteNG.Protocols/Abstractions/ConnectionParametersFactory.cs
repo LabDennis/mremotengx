@@ -238,12 +238,12 @@ public static class ConnectionParametersFactory
         };
 
         // Security. The legacy "server authentication" level decides what happens to a certificate that
-        // cannot be validated, exactly like mstsc's AuthenticationLevel.
+        // cannot be validated, exactly like mstsc's AuthenticationLevel. Only an explicit NoAuth skips checks.
         extras[RdpProtocol.CertPolicyKey] = info.RDPAuthenticationLevel switch
         {
+            AuthenticationLevel.NoAuth => "ignore",
             AuthenticationLevel.AuthRequired => "deny",
-            AuthenticationLevel.WarnOnFailedAuth => "tofu",
-            _ => "ignore",
+            _ => "tofu",
         };
         extras[Keys.RdpRestrictedAdmin] = Bool(info.UseRestrictedAdmin);
         extras[Keys.RdpRemoteCredentialGuard] = Bool(info.UseRCG);

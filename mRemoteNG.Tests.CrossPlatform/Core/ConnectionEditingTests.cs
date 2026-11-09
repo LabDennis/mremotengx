@@ -79,6 +79,7 @@ public class ConnectionEditingTests
 
         info.Colors.Should().Be(RDPColors.Colors16Bit);
         info.UseCredSsp.Should().BeTrue();
+        info.RDPAuthenticationLevel.Should().Be(AuthenticationLevel.WarnOnFailedAuth);
         info.AutomaticResize.Should().BeTrue();
         info.VNCEncoding.Should().Be(mRemoteNG.Core.Connection.Protocol.VNC.VncEncoding.EncHextile);
         info.RedirectSound.Should().Be(RDPSounds.DoNotPlay);

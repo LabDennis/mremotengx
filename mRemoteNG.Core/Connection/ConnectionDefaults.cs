@@ -20,6 +20,7 @@ namespace mRemoteNG.Core.Connection
             info.AutomaticResize = true;
             info.Colors = RDPColors.Colors16Bit;
             info.UseCredSsp = true;
+            info.RDPAuthenticationLevel = AuthenticationLevel.WarnOnFailedAuth;
             info.RedirectSound = RDPSounds.DoNotPlay;
             info.RDGatewayUseConnectionCredentials = RDGatewayUseConnectionCredentials.Yes;
             info.VNCSmartSizeMode = VncSmartSizeMode.SmartSAspect;
