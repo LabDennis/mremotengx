@@ -37,6 +37,8 @@ namespace mRemoteNG.Core.Security.SymmetricEncryption
             {
                 if (value < Pkcs5S2KeyGenerator.MinimumIterations)
                     throw new ArgumentOutOfRangeException(nameof(value), $"Minimum value is {Pkcs5S2KeyGenerator.MinimumIterations}");
+                if (value > Pkcs5S2KeyGenerator.MaximumIterations)
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Maximum value is {Pkcs5S2KeyGenerator.MaximumIterations}");
                 _keyDerivationIterations = value;
             }
         }

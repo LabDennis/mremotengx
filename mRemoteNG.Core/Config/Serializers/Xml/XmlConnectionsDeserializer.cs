@@ -5,6 +5,7 @@ using mRemoteNG.Core.Connection.Protocol;
 using mRemoteNG.Core.Connection.Protocol.Http;
 using mRemoteNG.Core.Connection.Protocol.RDP;
 using mRemoteNG.Core.Connection.Protocol.VNC;
+using mRemoteNG.Core.Config.Connections;
 using mRemoteNG.Core.Container;
 using mRemoteNG.Core.Security;
 using mRemoteNG.Core.Security.Factories;
@@ -58,11 +59,11 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
 
             if (confVersion >= 2.6)
             {
-                var iterations = GetInt(rootElement, "KdfIterations", 1000);
+                var iterations = GetKdfIterations(rootElement);
                 Encryption = new ConnectionFileEncryption(
                     GetEnum(rootElement, "EncryptionEngine", BlockCipherEngines.AES),
                     GetEnum(rootElement, "BlockCipherMode", BlockCipherModes.GCM),
-                    iterations < 1000 ? 1000 : iterations,
+                    iterations,
                     GetBool(rootElement, "FullFileEncryption", false));
                 _cryptoProvider = _cryptoProviderFactory.Build(Encryption.Engine, Encryption.Mode, Encryption.KeyDerivationIterations);
             }
@@ -472,6 +473,20 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
         {
             var val = e.GetAttribute(name);
             return string.IsNullOrEmpty(val) ? defaultValue : int.TryParse(val, out var result) ? result : defaultValue;
+        }
+
+        /// <summary>
+        /// Reads KdfIterations, raising small values to the minimum and rejecting values above the
+        /// maximum: the file is untrusted and every decrypt runs PBKDF2 with this count.
+        /// </summary>
+        private static int GetKdfIterations(XmlElement e)
+        {
+            var val = e.GetAttribute("KdfIterations");
+            if (string.IsNullOrEmpty(val) || !long.TryParse(val, NumberStyles.Integer, CultureInfo.InvariantCulture, out var iterations))
+                return ConnectionFileSecurity.MinKeyDerivationIterations;
+            if (iterations > ConnectionFileSecurity.MaxKeyDerivationIterations)
+                throw new ConnectionFileKdfIterationsException(iterations, ConnectionFileSecurity.MaxKeyDerivationIterations);
+            return (int)Math.Max(iterations, ConnectionFileSecurity.MinKeyDerivationIterations);
         }
 
         private static T GetEnum<T>(XmlElement e, string name, T defaultValue) where T : struct, Enum

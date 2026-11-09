@@ -1,5 +1,6 @@
 using mRemoteNG.Core.Config.Serializers.Xml;
 using mRemoteNG.Core.Security;
+using mRemoteNG.Core.Security.KeyDerivation;
 
 namespace mRemoteNG.Core.Config.Connections
 {
@@ -39,8 +40,8 @@ namespace mRemoteNG.Core.Config.Connections
     /// </summary>
     public static class ConnectionFileSecurity
     {
-        public const int MinKeyDerivationIterations = 1000;
-        public const int MaxKeyDerivationIterations = 50_000_000;
+        public const int MinKeyDerivationIterations = Pkcs5S2KeyGenerator.MinimumIterations;
+        public const int MaxKeyDerivationIterations = Pkcs5S2KeyGenerator.MaximumIterations;
 
         /// <summary>Returns the problems with <paramref name="change"/>; empty when it can be applied.</summary>
         public static IReadOnlyList<string> Validate(ConnectionsService service, ConnectionFileSecurityChange change)
