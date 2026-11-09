@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using mRemoteNGTests.TestHelpers;
@@ -32,8 +33,14 @@ namespace mRemoteNGTests.UI.Forms
         [Test]
         public void ListViewContainsOptionsPages()
         {
+#if DEBUG
+            // Options Management is added to debug builds only.
+            const int pages = 14;
+#else
+            const int pages = 13;
+#endif
             ListViewTester listViewTester = new("lstOptionPages", _optionsForm);
-            Assert.That(listViewTester.Items.Count, Is.EqualTo(13));
+            Assert.That(listViewTester.Items.Count, Is.EqualTo(pages));
         }
 
         [Test]
@@ -175,5 +182,8 @@ namespace mRemoteNGTests.UI.Forms
                 Application.DoEvents();
             });
         }
+
+        private static IEnumerable<Control> AllControls(Control parent) =>
+            parent.Controls.Cast<Control>().SelectMany(control => new[] { control }.Concat(AllControls(control)));
     }
 }

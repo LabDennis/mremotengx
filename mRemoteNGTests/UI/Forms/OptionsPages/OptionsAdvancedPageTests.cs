@@ -22,6 +22,7 @@ namespace mRemoteNGTests.UI.Forms.OptionsPages
         [Test]
         public void AdvancedPageLinkExistsInListView()
         {
+            // Plugins comes right before Advanced.
             ListViewTester listViewTester = new("lstOptionPages", _optionsForm);
             Assert.That(AdvancedItem(listViewTester), Is.Not.Null);
         }

@@ -1162,7 +1162,7 @@ namespace mRemoteNG.UI.Tabs
             if (!m_suspendDrag)
                 base.OnMouseMove(e);
 
-            // The event's position, not the live cursor: they differ once the cursor moved on.
+            // The position the event was raised for, not where the cursor is by the time it is handled.
             int index = HitTest(e.Location);
             string toolTip = string.Empty;
 

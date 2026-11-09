@@ -39,6 +39,9 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
         {
             try
             {
+                // Serialize(ConnectionInfo) builds the table. Building it here as well listed the
+                // rows of a source table twice, and the duplicate key threw before any change was
+                // written, so the source table came back as it was.
                 ContainerInfo rootNode = connectionTreeModel.RootNodes.First(node => node is RootNodeInfo);
 
                 return Serialize(rootNode);

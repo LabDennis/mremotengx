@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - fixed random string generator never picking the last character of its pool
 - fixed connection and credential files with unreadable encryption settings silently falling back to legacy encryption
 - hardened connection, credential and profile encryption: PBKDF2-HMAC-SHA256 over UTF-8 with at least 600,000 iterations; older files still open and are upgraded on their next save
+- fixed the new password dialog accepting an empty, too short or mismatched password when clicking OK
 - #2154: fixed "Alert on Idle Disconnect" and "Disable Cursor Blinking" showing the labels of other RDP properties in the Config panel
 - fixed connection tree search bar ignoring the "place search bar above connection tree" setting at startup
 - fixed connection tree filter hiding matches inside collapsed folders; folders opened by the filter are collapsed again when the search is cleared
