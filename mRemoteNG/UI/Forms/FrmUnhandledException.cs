@@ -6,6 +6,7 @@ using System.Text;
 using System.Windows.Forms;
 using mRemoteNG.App;
 using mRemoteNG.App.Info;
+using mRemoteNG.Themes;
 using mRemoteNG.Resources.Language;
 
 namespace mRemoteNG.UI.Forms
@@ -25,6 +26,7 @@ namespace mRemoteNG.UI.Forms
             _isFatal = isFatal;
             InitializeComponent();
             SetLanguage();
+            ApplyTheme();
 
             if (exception == null)
                 return;
@@ -32,6 +34,20 @@ namespace mRemoteNG.UI.Forms
             textBoxExceptionMessage.Text = exception.Message;
             textBoxStackTrace.Text = exception.StackTrace;
             SetEnvironmentText();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            ThemeManager.getInstance().ApplyThemeToTitleBar(this);
+        }
+
+        private void ApplyTheme()
+        {
+            ThemeManager.getInstance().ApplyThemeToTitleBar(this);
+            if (!ThemeManager.getInstance().ActiveAndExtended) return;
+            BackColor = ThemeManager.getInstance().ActiveTheme.ExtendedPalette.getColor("Dialog_Background");
+            ForeColor = ThemeManager.getInstance().ActiveTheme.ExtendedPalette.getColor("Dialog_Foreground");
         }
 
         private void SetEnvironmentText()

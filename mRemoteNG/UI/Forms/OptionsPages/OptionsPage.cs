@@ -13,7 +13,8 @@ namespace mRemoteNG.UI.Forms.OptionsPages
         protected OptionsPage()
         {
             InitializeComponent();
-            //ThemeManager.getInstance().ThemeChanged += ApplyTheme;
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime) return;
+            ThemeManager.getInstance().ThemeChanged += ApplyTheme;
         }
 
         #region Public Properties
