@@ -54,6 +54,18 @@ public sealed class VncProtocolTests : IAsyncLifetime
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConnectionParametersFactory_PassesTheClearTextPasswordOptIn(bool allow)
+    {
+        var info = new ConnectionInfo { Protocol = CoreProtocol.VNC, Hostname = "h", VNCAllowCleartextPassword = allow };
+
+        var settings = VncSessionSettings.FromParameters(ConnectionParametersFactory.FromConnectionInfo(info));
+
+        settings.AllowCleartextPassword.Should().Be(allow);
+    }
+
+    [Theory]
     [InlineData("none", VncScaling.None)]
     [InlineData("Stretch", VncScaling.Stretch)]
     [InlineData("fit", VncScaling.Fit)]

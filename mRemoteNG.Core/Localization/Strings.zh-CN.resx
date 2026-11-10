@@ -2128,4 +2128,10 @@
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>用于加载插件的其他目录，以分号（;）分隔。</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>允许明文密码</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>允许使用 VeNCrypt Plain，它会以未加密方式发送用户名和密码。仅用于受信任的网络。</value>
+  </data>
 </root>

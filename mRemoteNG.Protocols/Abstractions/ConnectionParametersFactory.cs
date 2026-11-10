@@ -94,6 +94,8 @@ public static class ConnectionParametersFactory
         public const string VncColors = "vnc.colors";
         /// <summary>VNC authentication: "vnc", "windows" (UltraVNC MS-Logon) or "ard" (Apple Remote Desktop).</summary>
         public const string VncAuthMode = "vnc.authMode";
+        /// <summary>"true" allows VeNCrypt Plain, which sends the VNC user name and password unencrypted.</summary>
+        public const string VncAllowCleartextPassword = "vnc.allowCleartextPassword";
         /// <summary>VNC proxy: "none", "http", "socks5" or "ultravnc" (repeater).</summary>
         public const string VncProxyType = "vnc.proxy.type";
         public const string VncProxyHost = "vnc.proxy.host";
@@ -322,6 +324,7 @@ public static class ConnectionParametersFactory
             _ => "fit",
         };
         extras[Keys.VncViewOnly] = Bool(info.VNCViewOnly);
+        extras[Keys.VncAllowCleartextPassword] = Bool(info.VNCAllowCleartextPassword);
         extras[Keys.VncEncoding] = info.VNCEncoding switch
         {
             VncEncoding.EncRaw => "raw",

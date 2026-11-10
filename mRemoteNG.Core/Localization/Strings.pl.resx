@@ -2128,4 +2128,10 @@ Użyj „Zakończ tryb pełnoekranowy” u góry tego okna, aby ją przywrócić
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Dodatkowe foldery, z których wczytywane są wtyczki, rozdzielone średnikami (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Zezwalaj na hasło w postaci jawnej</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Zezwala na VeNCrypt Plain, który wysyła nazwę użytkownika i hasło bez szyfrowania. Tylko w zaufanych sieciach.</value>
+  </data>
 </root>

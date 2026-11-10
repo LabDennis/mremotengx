@@ -113,6 +113,7 @@ namespace mRemoteNG.Core.Connection
         public bool VNCColors { get; set; }
         public bool VNCSmartSizeMode { get; set; }
         public bool VNCViewOnly { get; set; }
+        public bool VNCAllowCleartextPassword { get; set; }
 
         // Computed
         public bool EverythingInherited

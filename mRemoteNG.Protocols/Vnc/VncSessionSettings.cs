@@ -50,6 +50,9 @@ public sealed record VncSessionSettings
     public VncAuthenticationMode AuthMode { get; init; } = VncAuthenticationMode.Vnc;
     public VncProxySettings? Proxy { get; init; }
 
+    /// <summary>Allows sending the user name and password unencrypted (VeNCrypt Plain); off by default.</summary>
+    public bool AllowCleartextPassword { get; init; }
+
     public IReadOnlyList<int> Encodings => RfbClientOptions.BuildEncodings(PreferredEncoding, CompressionLevel, JpegQuality);
 
     public PixelFormat PixelFormat => ColourDepth switch
@@ -98,6 +101,7 @@ public sealed record VncSessionSettings
                 "ard" or "apple" => VncAuthenticationMode.AppleRemoteDesktop,
                 _ => VncAuthenticationMode.Vnc,
             },
+            AllowCleartextPassword = string.Equals(Get(Keys.VncAllowCleartextPassword), "true", StringComparison.OrdinalIgnoreCase),
             Proxy = ParseProxy(Get(Keys.VncProxyType), Get(Keys.VncProxyHost), Get(Keys.VncProxyPort),
                 Get(Keys.VncProxyUsername), extras.GetValueOrDefault(Keys.VncProxyPassword)),
         };

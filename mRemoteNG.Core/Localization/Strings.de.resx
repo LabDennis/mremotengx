@@ -2128,4 +2128,10 @@ Verwenden Sie „Vollbild beenden“ oben in diesem Fenster, um sie zurückzuhol
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Weitere Ordner, aus denen Plugins geladen werden, durch Semikolons (;) getrennt.</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Klartext-Passwort erlauben</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>VeNCrypt Plain erlauben, das Benutzername und Passwort unverschlüsselt sendet. Nur für vertrauenswürdige Netzwerke.</value>
+  </data>
 </root>

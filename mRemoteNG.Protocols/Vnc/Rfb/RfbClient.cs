@@ -94,6 +94,12 @@ public sealed class RfbClientOptions
     /// for <see cref="TlsTargetHost"/> are accepted.
     /// </summary>
     public RfbCertificateValidator? ValidateServerCertificate { get; init; }
+
+    /// <summary>
+    /// Allows the unencrypted VeNCrypt Plain sub-type, which sends the user name and password in clear text. Off by
+    /// default: anyone on the network path could strip the TLS sub-types from the server's offer to read them.
+    /// </summary>
+    public bool AllowCleartextPassword { get; init; }
 }
 
 /// <summary>
@@ -508,6 +514,8 @@ public sealed class RfbClient : IDisposable
             {
                 if (string.IsNullOrEmpty(options.Username))
                     throw new RfbAuthenticationException("The server requires a user name and password (VeNCrypt Plain): configure them for this connection.");
+                if (!IsEncrypted && !options.AllowCleartextPassword)
+                    throw new RfbAuthenticationException(CleartextRefusedMessage);
                 var user = Encoding.UTF8.GetBytes(options.Username);
                 var password = Encoding.UTF8.GetBytes(options.Password ?? "");
                 var message = new byte[8 + user.Length + password.Length];
@@ -568,7 +576,9 @@ public sealed class RfbClient : IDisposable
             ?? throw new RfbVeNCryptUnsupportedException(
                 "The server offers no usable VeNCrypt sub-type (offered: "
                 + (count == 0 ? "none" : string.Join(", ", offered.Select(VeNCryptSubtype.Name)))
-                + "). Anonymous TLS (the TLS* sub-types) is not supported; configure the server to use an X509 certificate.",
+                + "). "
+                + (offered.Contains(VeNCryptSubtype.Plain) && !options.AllowCleartextPassword ? CleartextRefusedMessage + " " : "")
+                + "Anonymous TLS (the TLS* sub-types) is not supported; configure the server to use an X509 certificate.",
                 otherTypesOffered);
         Span<byte> choice = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32BigEndian(choice, subtype);
@@ -585,23 +595,29 @@ public sealed class RfbClient : IDisposable
         return subtype;
     }
 
+    private const string CleartextRefusedMessage =
+        "The server only accepts the user name and password unencrypted (VeNCrypt Plain), which is refused unless \"Allow clear-text password\" is enabled for this connection.";
+
     /// <summary>
     /// The preferred VeNCrypt sub-type: TLS with a certificate first (user name and password, VNC password, then
     /// none, as the credentials allow), then the unencrypted VNC password and None, and Plain (clear-text password)
-    /// last. Failing that, a sub-type that needs a missing credential, so the error names it; null when nothing fits.
+    /// last, only when <see cref="RfbClientOptions.AllowCleartextPassword"/> is set. Failing that, a sub-type that
+    /// needs a missing credential, so the error names it; null when nothing fits.
     /// </summary>
     internal static uint? ChooseVeNCryptSubtype(IReadOnlyCollection<uint> offered, RfbClientOptions options)
     {
         var hasUser = !string.IsNullOrEmpty(options.Username);
         var hasPassword = options.Password is not null;
+        var allowPlain = options.AllowCleartextPassword;
         var preferred = new List<uint>();
         if (hasUser) preferred.Add(VeNCryptSubtype.X509Plain);
         if (hasPassword) preferred.Add(VeNCryptSubtype.X509Vnc);
         preferred.Add(VeNCryptSubtype.X509None);
         if (hasPassword) preferred.Add(VeNCryptSubtype.VncAuthentication);
         preferred.Add(VeNCryptSubtype.None);
-        if (hasUser) preferred.Add(VeNCryptSubtype.Plain);
-        preferred.AddRange([VeNCryptSubtype.X509Vnc, VeNCryptSubtype.X509Plain, VeNCryptSubtype.VncAuthentication, VeNCryptSubtype.Plain]);
+        if (hasUser && allowPlain) preferred.Add(VeNCryptSubtype.Plain);
+        preferred.AddRange([VeNCryptSubtype.X509Vnc, VeNCryptSubtype.X509Plain, VeNCryptSubtype.VncAuthentication]);
+        if (allowPlain) preferred.Add(VeNCryptSubtype.Plain);
         foreach (var subtype in preferred)
         {
             if (offered.Contains(subtype)) return subtype;

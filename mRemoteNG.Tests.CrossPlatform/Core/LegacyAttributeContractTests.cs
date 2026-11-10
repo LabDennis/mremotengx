@@ -121,6 +121,23 @@ public class LegacyAttributeContractTests : IDisposable
     }
 
     [Fact]
+    public void VncClearTextPasswordOptIn_RoundTrips()
+    {
+        var path = Path.Combine(_tempDir, "vnc.xml");
+        var service = new ConnectionsService(new CryptoProviderFactory());
+        var root = service.CreateNew().RootNode;
+        var node = new ConnectionInfo { Name = "vnc", Hostname = "host", Protocol = mRemoteNG.Core.Connection.Protocol.ProtocolType.VNC };
+        node.VNCAllowCleartextPassword = true;
+        node.Inheritance.VNCAllowCleartextPassword = true;
+        root.AddChild(node);
+        service.SaveToFile(path);
+
+        var loaded = new ConnectionsService(new CryptoProviderFactory()).LoadFromFile(path).GetConnections().Single();
+        loaded.VNCAllowCleartextPassword.Should().BeTrue();
+        loaded.Inheritance.VNCAllowCleartextPassword.Should().BeTrue();
+    }
+
+    [Fact]
     public void ConsoleSessionAndConnectedFlags_RoundTripUnderLegacyNames()
     {
         var path = Path.Combine(_tempDir, "flags.xml");

@@ -192,9 +192,9 @@ public sealed class VncVeNCryptTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Plain_SendsTheUserNameAndPassword_AndFlagsThemAsCleartext()
+    public async Task Plain_WhenAllowed_SendsTheUserNameAndPassword_AndFlagsThemAsCleartext()
     {
-        var client = await ConnectAsync(new RfbClientOptions { Username = "alice", Password = "pässword" }, async () =>
+        var client = await ConnectAsync(new RfbClientOptions { Username = "alice", Password = "pässword", AllowCleartextPassword = true }, async () =>
         {
             (await OfferSubtypesAsync([RfbSecurityType.VeNCrypt], VeNCryptSubtype.Plain)).Should().Be(VeNCryptSubtype.Plain);
             var lengths = await _server.ReceiveAsync(8);
@@ -208,10 +208,34 @@ public sealed class VncVeNCryptTests : IAsyncLifetime
         client.SentCleartextPassword.Should().BeTrue();
     }
 
+    [Theory]
+    [InlineData(new byte[] { RfbSecurityType.VeNCrypt, RfbSecurityType.VncAuthentication }, true)]
+    [InlineData(new byte[] { RfbSecurityType.VeNCrypt }, false)]
+    public async Task Plain_ByDefault_IsRefused_WithoutSendingTheCredentials(byte[] topLevel, bool otherOffered)
+    {
+        var act = () => ConnectAsync(new RfbClientOptions { Username = "alice", Password = "pässword" }, async () =>
+        {
+            await _server.NegotiateVersionAsync("003.008");
+            await _server.SendAsync(new RfbBytes().U8(topLevel.Length).Raw(topLevel));
+            (await _server.ReceiveAsync(1))[0].Should().Be(RfbSecurityType.VeNCrypt);
+            await _server.SendAsync(new RfbBytes().U8(0).U8(2));
+            (await _server.ReceiveAsync(2)).Should().Equal(0, 2);
+            await _server.SendAsync(new RfbBytes().U8(0).U8(1).U32(VeNCryptSubtype.Plain));
+        });
+
+        (await act.Should().ThrowAsync<RfbVeNCryptUnsupportedException>().WithMessage("*Plain*refused*"))
+            .Which.OtherSecurityTypesOffered.Should().Be(otherOffered);
+
+        _tcp.Close();
+        var rest = new MemoryStream();
+        await _server.Stream.CopyToAsync(rest).WaitAsync(Timeout);
+        rest.ToArray().Should().BeEmpty("no sub-type choice and no credentials may be sent");
+    }
+
     [Fact]
     public async Task AuthenticationFailure_NamesTheVeNCryptSubtype()
     {
-        var act = () => ConnectAsync(new RfbClientOptions { Username = "alice", Password = "wrong" }, async () =>
+        var act = () => ConnectAsync(new RfbClientOptions { Username = "alice", Password = "wrong", AllowCleartextPassword = true }, async () =>
         {
             await OfferSubtypesAsync([RfbSecurityType.VeNCrypt], VeNCryptSubtype.Plain);
             await _server.ReceiveAsync(8 + 5 + 5);
@@ -244,12 +268,25 @@ public sealed class VncVeNCryptTests : IAsyncLifetime
     [InlineData("user", "pw", new uint[] { 2, 261, 262, 256 }, 262u)]
     [InlineData(null, "pw", new uint[] { 1, 2, 256 }, 2u)]
     [InlineData(null, null, new uint[] { 2, 1 }, 1u)]
-    [InlineData("user", null, new uint[] { 256, 2 }, 256u)]
+    [InlineData("user", null, new uint[] { 256, 2 }, 2u)]
+    [InlineData("user", "pw", new uint[] { 256 }, null)]
+    [InlineData(null, null, new uint[] { 256 }, null)]
     [InlineData(null, null, new uint[] { 261 }, 261u)]
     [InlineData(null, null, new uint[] { 257, 258, 259 }, null)]
     public void SubtypePreference_FavoursTls_ThenWhatTheCredentialsAllow(string? user, string? password, uint[] offered, uint? expected)
     {
         RfbClient.ChooseVeNCryptSubtype(offered, new RfbClientOptions { Username = user, Password = password })
+            .Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("user", "pw", new uint[] { 256 }, 256u)]
+    [InlineData("user", null, new uint[] { 256, 2 }, 256u)]
+    [InlineData("user", "pw", new uint[] { 256, 262 }, 262u)]
+    [InlineData(null, null, new uint[] { 256 }, 256u)]
+    public void SubtypePreference_WithCleartextAllowed_UsesPlainOnlyWithoutTls(string? user, string? password, uint[] offered, uint? expected)
+    {
+        RfbClient.ChooseVeNCryptSubtype(offered, new RfbClientOptions { Username = user, Password = password, AllowCleartextPassword = true })
             .Should().Be(expected);
     }
 

@@ -2847,4 +2847,12 @@ Use “Exit full screen” at the top of that window to bring it back.</value>
     <value>More folders to load plugins from, separated by semicolons (;).</value>
     <comment>Options &gt; Plugins</comment>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Allow clear-text password</value>
+    <comment>Connection properties &gt; VNC</comment>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Allow VeNCrypt Plain, which sends the user name and password unencrypted. Only for trusted networks.</value>
+    <comment>Connection properties &gt; VNC</comment>
+  </data>
 </root>

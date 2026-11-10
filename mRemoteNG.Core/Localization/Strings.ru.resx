@@ -2128,4 +2128,10 @@
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Дополнительные папки для загрузки подключаемых модулей, через точку с запятой (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Разрешить пароль открытым текстом</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Разрешает VeNCrypt Plain, при котором имя пользователя и пароль передаются без шифрования. Только для доверенных сетей.</value>
+  </data>
 </root>
