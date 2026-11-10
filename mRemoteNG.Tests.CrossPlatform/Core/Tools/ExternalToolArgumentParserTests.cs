@@ -118,6 +118,163 @@ public sealed class ExternalToolArgumentParserTests
         WindowsParser(connection).ParseArguments("%COMSPEC%").Should().Be(ComSpec);
     }
 
+    // ── Windows programs started directly ─────────────────────────────────
+
+    private static ExternalToolArgumentParser ProgramParser(ConnectionInfo connection) =>
+        new(ExternalToolVariables.FromConnection(connection), ArgumentEscapingStyle.WindowsProgram, Environment);
+
+    /// <summary>Splits a command line (without the program name) like <c>CommandLineToArgvW</c>.</summary>
+    internal static List<string> SplitLikeCommandLineToArgvW(string commandLine)
+    {
+        var args = new List<string>();
+        var current = new System.Text.StringBuilder();
+        bool inQuotes = false, hasArgument = false;
+        int i = 0;
+        while (i < commandLine.Length)
+        {
+            char c = commandLine[i];
+            if (c == '\\')
+            {
+                int count = 0;
+                while (i < commandLine.Length && commandLine[i] == '\\')
+                {
+                    count++;
+                    i++;
+                }
+                if (i < commandLine.Length && commandLine[i] == '"')
+                {
+                    current.Append('\\', count / 2);
+                    if (count % 2 == 1)
+                    {
+                        current.Append('"');
+                        i++;
+                    }
+                }
+                else
+                {
+                    current.Append('\\', count);
+                }
+                hasArgument = true;
+                continue;
+            }
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < commandLine.Length && commandLine[i + 1] == '"')
+                {
+                    current.Append('"');
+                    i += 2;
+                    continue;
+                }
+                inQuotes = !inQuotes;
+                hasArgument = true;
+                i++;
+                continue;
+            }
+            if ((c == ' ' || c == '\t') && !inQuotes)
+            {
+                if (hasArgument)
+                {
+                    args.Add(current.ToString());
+                    current.Clear();
+                    hasArgument = false;
+                }
+                i++;
+                continue;
+            }
+            current.Append(c);
+            hasArgument = true;
+            i++;
+        }
+        if (hasArgument)
+            args.Add(current.ToString());
+        return args;
+    }
+
+    [Fact]
+    public void ProgramStyle_QuoteInValue_CannotEndTheQuotedArgument()
+    {
+        var parsed = ProgramParser(new ConnectionInfo { Hostname = "x\" -evil \"" }).ParseArguments("-ssh \"%HOSTNAME%\"");
+
+        parsed.Should().NotContain("^");
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal("-ssh", "x\" -evil \"");
+    }
+
+    [Theory]
+    [InlineData("plain")]
+    [InlineData(TestString)]
+    [InlineData(@"trailing\")]
+    [InlineData(@"trailing\\")]
+    [InlineData(@"x\"" -evil """)]
+    [InlineData(@"x\\"" -evil \""")]
+    [InlineData(@"C:\Program Files\")]
+    [InlineData("\"")]
+    [InlineData("")]
+    public void ProgramStyle_QuotedVariable_IsExactlyOneArgument(string value)
+    {
+        foreach (string template in (string[])["--pw \"%PASSWORD%\" end", "--pw \"%-PASSWORD%\" end"])
+        {
+            var parsed = ProgramParser(new ConnectionInfo { Password = value }).ParseArguments(template);
+
+            SplitLikeCommandLineToArgvW(parsed).Should().Equal(["--pw", value, "end"], template);
+        }
+    }
+
+    [Fact]
+    public void ProgramStyle_TrailingBackslashBeforeTheNextValue_DoesNotEscapeItsQuote()
+    {
+        var connection = new ConnectionInfo { Username = @"dom\", Hostname = "\" -evil \"" };
+
+        var parsed = ProgramParser(connection).ParseArguments("\"%USERNAME%%HOSTNAME%\" end");
+
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal(@"dom\"" -evil """, "end");
+    }
+
+    [Fact]
+    public void ProgramStyle_TrailingBackslashInOneArgument_DoesNotJoinTheNext()
+    {
+        var connection = new ConnectionInfo { Username = @"a\", Password = " -evil " };
+
+        var parsed = ProgramParser(connection).ParseArguments("\"%USERNAME%\" \"%PASSWORD%\"");
+
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal(@"a\", " -evil ");
+    }
+
+    [Fact]
+    public void ProgramStyle_TemplateBackslashBeforeAValueQuote_StaysLiteral()
+    {
+        var parsed = ProgramParser(new ConnectionInfo { Hostname = "\" -evil \"" }).ParseArguments(@"""C:\%HOSTNAME%""");
+
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal(@"C:\"" -evil """);
+    }
+
+    [Fact]
+    public void ProgramStyle_TemplateQuotesAndBackslashes_AreKept()
+    {
+        var parsed = ProgramParser(new ConnectionInfo { Hostname = "srv" }).ParseArguments(@"-a ""C:\dir\\"" -b \""q\"" %HOSTNAME%");
+
+        parsed.Should().Be(@"-a ""C:\dir\\"" -b \""q\"" srv");
+    }
+
+    [Fact]
+    public void ProgramStyle_UnquotedValueWithQuote_IsOneArgument()
+    {
+        var parsed = ProgramParser(new ConnectionInfo { Hostname = @"a""b\""c" }).ParseArguments("ping %HOSTNAME%");
+
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal("ping", @"a""b\""c");
+    }
+
+    [Fact]
+    public void ProgramStyle_BangInsertsRawValue_WhichMayAddArguments()
+    {
+        var parsed = ProgramParser(new ConnectionInfo { UserField = "-v -o \"A B\"" }).ParseArguments("ssh %!USERFIELD% host");
+
+        SplitLikeCommandLineToArgvW(parsed).Should().Equal("ssh", "-v", "-o", "A B", "host");
+    }
+
+    [Fact]
+    public void ProgramStyle_UsesEnvironmentVariables_AsLiteralText() =>
+        ProgramParser(new ConnectionInfo()).ParseArguments("\"%COMSPEC%\"").Should().Be($"\"{ComSpec}\"");
+
     // ── POSIX style ────────────────────────────────────────────────────────
 
     private static ExternalToolArgumentParser PosixParser(ConnectionInfo connection) =>
