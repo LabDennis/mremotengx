@@ -70,6 +70,8 @@ public sealed class ExternalToolLauncherTests : IDisposable
     [InlineData(@"C:\Windows\System32\cmd.exe", true)]
     [InlineData(@"""C:\scripts\run.bat""", true)]
     [InlineData(@"C:\scripts\run.cmd", true)]
+    [InlineData(@"C:\scripts\run.bat.", true)]
+    [InlineData("cmd.exe. .", true)]
     [InlineData(@"C:\Tools\plink.exe", false)]
     [InlineData("cmdx.exe", false)]
     [InlineData("powershell", false)]
