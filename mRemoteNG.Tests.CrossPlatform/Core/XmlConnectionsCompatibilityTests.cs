@@ -1,6 +1,7 @@
 using System.Xml;
 using FluentAssertions;
 using mRemoteNG.Core.Config.Connections;
+using mRemoteNG.Core.Config.Import;
 using mRemoteNG.Core.Config.Serializers.Xml;
 using mRemoteNG.Core.Connection;
 using mRemoteNG.Core.Container;
@@ -183,6 +184,53 @@ public class XmlConnectionsCompatibilityTests : IDisposable
         var act = () => new ConnectionsService(new CryptoProviderFactory()).LoadFromFile(path);
 
         act.Should().Throw<ConnectionFileVersionException>();
+    }
+
+    [Theory]
+    [InlineData("50000001")]
+    [InlineData("2147483647")]
+    [InlineData("9223372036854775807")]
+    public void FileWithTooManyKdfIterations_IsRejectedBeforeDecrypting(string iterations)
+    {
+        var protectedMarker = new CryptoProviderFactory().Build().Encrypt("ThisIsNotProtected", "mR3m");
+        var path = Path.Combine(_tempDir, "kdf-dos.xml");
+        File.WriteAllText(path, $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Connections Name="Connections" EncryptionEngine="AES" BlockCipherMode="GCM" KdfIterations="{iterations}" FullFileEncryption="false" Protected="{protectedMarker}" ConfVersion="2.8" />
+            """);
+
+        var act = () => new ConnectionsService(new CryptoProviderFactory()).LoadFromFile(path);
+
+        act.Should().Throw<ConnectionFileKdfIterationsException>();
+    }
+
+    [Fact]
+    public void FileWithTooManyKdfIterations_IsRejectedByImport()
+    {
+        var path = Path.Combine(_tempDir, "kdf-dos-import.xml");
+        File.WriteAllText(path, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Connections Name="Connections" KdfIterations="2147483647" Protected="AAAA" ConfVersion="2.6" />
+            """);
+
+        var act = () => new MRemoteNGXmlImporter(new CryptoProviderFactory()).Import(path, new ContainerInfo());
+
+        act.Should().Throw<ConnectionFileKdfIterationsException>();
+    }
+
+    [Fact]
+    public void FileWithMaximumKdfIterations_IsAccepted()
+    {
+        var path = Path.Combine(_tempDir, "kdf-max.xml");
+        File.WriteAllText(path, $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Connections Name="Connections" KdfIterations="{ConnectionFileSecurity.MaxKeyDerivationIterations}" ConfVersion="2.8" />
+            """);
+
+        var service = new ConnectionsService(new CryptoProviderFactory());
+        service.LoadFromFile(path);
+
+        service.Encryption.KeyDerivationIterations.Should().Be(ConnectionFileSecurity.MaxKeyDerivationIterations);
     }
 
     [Fact]

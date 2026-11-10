@@ -1,5 +1,6 @@
 using FluentAssertions;
 using mRemoteNG.Core.Security;
+using mRemoteNG.Core.Security.KeyDerivation;
 using mRemoteNG.Core.Security.SymmetricEncryption;
 using Xunit;
 
@@ -45,6 +46,17 @@ public class AeadCryptographyProviderTests
         var act = () => provider.Decrypt(cipherText, "wrong");
 
         act.Should().Throw<EncryptionException>();
+    }
+
+    [Fact]
+    public void KeyDerivationIterations_AboveMaximum_Throws()
+    {
+        var provider = new AeadCryptographyProvider();
+
+        provider.Invoking(p => p.KeyDerivationIterations = Pkcs5S2KeyGenerator.MaximumIterations + 1)
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => new AeadCryptographyProvider(keyDerivationIterations: int.MaxValue))
+            .Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]

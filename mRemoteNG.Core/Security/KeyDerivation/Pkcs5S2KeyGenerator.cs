@@ -11,11 +11,14 @@ namespace mRemoteNG.Core.Security.KeyDerivation
     public class Pkcs5S2KeyGenerator : IKeyDerivationFunction
     {
         public const int MinimumIterations = 1000;
+        public const int MaximumIterations = 50_000_000;
 
         public byte[] DeriveKey(string password, byte[] salt, int iterations, int keySizeInBits)
         {
             if (iterations < MinimumIterations)
                 throw new ArgumentOutOfRangeException(nameof(iterations), $"Minimum value of {nameof(iterations)} is {MinimumIterations}");
+            if (iterations > MaximumIterations)
+                throw new ArgumentOutOfRangeException(nameof(iterations), $"Maximum value of {nameof(iterations)} is {MaximumIterations}");
 
             // The legacy app used PKCS#5 password encoding (one byte per char), not UTF-8.
             // Changing this would make every existing connection file undecryptable.
