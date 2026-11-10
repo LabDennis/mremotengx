@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
+using mRemoteNG.Core.Tools;
 using mRemoteNG.Protocols.Abstractions;
 
 namespace mRemoteNG.Protocols.External;
@@ -18,6 +18,10 @@ namespace mRemoteNG.Protocols.External;
 ///   {username}   — username
 ///   {password}   — password (use with caution)
 ///   {domain}     — Windows domain
+///
+/// The template is split into arguments (<see cref="CommandLineTokenizer"/>) before the tokens are
+/// substituted, so a connection value always stays inside the argument it appears in and is never
+/// re-split or parsed as an option.
 ///
 /// Example configurations in <see cref="ConnectionParameters.Extras"/>:
 ///   "external.command"   = "anydesk {hostname}"
@@ -45,20 +49,29 @@ public sealed class ExternalAppProtocol : ProtocolBase, IVisualProtocol
             return;
         }
 
-        string command = SubstituteTokens(commandTemplate, parameters);
+        ProcessStartInfo startInfo;
+        try
+        {
+            startInfo = BuildStartInfo(commandTemplate, parameters);
+        }
+        catch (ArgumentException ex)
+        {
+            State = ConnectionState.Error;
+            RaiseStatus($"Launch failed: {ex.Message}");
+            _logger.LogWarning("External app not launched: {Reason}", ex.Message);
+            return;
+        }
+
+        string exe = startInfo.FileName;
+        string command = string.Join(' ', startInfo.ArgumentList.Prepend(exe));
         _logger.LogInformation("External app: {Command}", command);
         RaiseStatus($"Launching: {command}");
 
         try
         {
-            (string exe, string args) = SplitCommand(command);
-
             _process = new Process
             {
-                StartInfo = new ProcessStartInfo(exe, args)
-                {
-                    UseShellExecute = true, // Allows macOS `open`, Windows `start`, etc.
-                },
+                StartInfo = startInfo,
                 EnableRaisingEvents = true,
             };
 
@@ -93,6 +106,51 @@ public sealed class ExternalAppProtocol : ProtocolBase, IVisualProtocol
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Builds the process to launch for <paramref name="template"/>: the first argument is the program, each
+    /// further argument is passed separately through <see cref="ProcessStartInfo.ArgumentList"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// The template is empty, the hostname is unsafe, or a substituted value would turn an argument into an option.
+    /// </exception>
+    internal static ProcessStartInfo BuildStartInfo(string template, ConnectionParameters parameters)
+    {
+        if (template.Contains("{hostname}", StringComparison.OrdinalIgnoreCase))
+            ValidateHostname(parameters.Hostname);
+
+        var arguments = new List<string>();
+        foreach (string token in CommandLineTokenizer.Split(template))
+        {
+            string value = SubstituteTokens(token, parameters);
+            if (value.Length == 0)
+                continue;
+            if (value.StartsWith('-') && !token.StartsWith('-'))
+                throw new ArgumentException($"A connection value would turn the argument '{token}' into an option.");
+            arguments.Add(value);
+        }
+
+        if (arguments.Count == 0)
+            throw new ArgumentException("The external command is empty.");
+
+        var startInfo = new ProcessStartInfo(arguments[0])
+        {
+            UseShellExecute = true, // Allows macOS `open`, Windows `start`, etc.
+        };
+        foreach (string argument in arguments.Skip(1))
+            startInfo.ArgumentList.Add(argument);
+        return startInfo;
+    }
+
+    private static void ValidateHostname(string hostname)
+    {
+        if (string.IsNullOrEmpty(hostname))
+            throw new ArgumentException("The hostname is empty.");
+        if (hostname.StartsWith('-'))
+            throw new ArgumentException("The hostname must not start with '-'.");
+        if (hostname.Any(c => char.IsWhiteSpace(c) || char.IsControl(c)))
+            throw new ArgumentException("The hostname must not contain whitespace or control characters.");
+    }
+
     private static string SubstituteTokens(string template, ConnectionParameters p)
     {
         return template
@@ -101,25 +159,6 @@ public sealed class ExternalAppProtocol : ProtocolBase, IVisualProtocol
             .Replace("{username}", p.Username ?? string.Empty, StringComparison.OrdinalIgnoreCase)
             .Replace("{password}", p.Password ?? string.Empty, StringComparison.OrdinalIgnoreCase)
             .Replace("{domain}", p.Domain ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static (string exe, string args) SplitCommand(string command)
-    {
-        command = command.Trim();
-
-        // Quoted executable
-        if (command.StartsWith('"'))
-        {
-            int end = command.IndexOf('"', 1);
-            if (end > 0)
-                return (command[1..end], command[(end + 1)..].Trim());
-        }
-
-        // Unquoted
-        int space = command.IndexOf(' ');
-        return space < 0
-            ? (command, string.Empty)
-            : (command[..space], command[(space + 1)..].Trim());
     }
 
     protected override void Dispose(bool disposing)
