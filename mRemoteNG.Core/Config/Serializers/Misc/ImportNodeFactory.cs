@@ -49,7 +49,7 @@ namespace mRemoteNG.Core.Config.Serializers.Misc
             node.RedirectSound = RDPSounds.DoNotPlay;
             node.SoundQuality = RDPSoundQuality.Dynamic;
             node.UseCredSsp = true;
-            node.RDPAuthenticationLevel = AuthenticationLevel.NoAuth;
+            node.RDPAuthenticationLevel = AuthenticationLevel.WarnOnFailedAuth;
             node.RenderingEngine = RenderingEngine.EdgeChromium;
             node.RDGatewayUsageMethod = RDGatewayUsageMethod.Never;
             node.RDGatewayUseConnectionCredentials = RDGatewayUseConnectionCredentials.Yes;
