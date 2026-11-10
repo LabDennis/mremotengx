@@ -246,7 +246,51 @@ public class RfbDecoderTests
         act.Should().Throw<RfbProtocolException>();
     }
 
+    [Fact]
+    public void Zrle_DecompressionBomb_ThrowsWithoutLargeAllocation()
+    {
+        // A valid solid tile followed by 64 MB of zeros, which compresses to well under 100 KB.
+        var payload = new byte[64 * 1024 * 1024];
+        payload[0] = 1;
+        var wire = CompressZrle(payload);
+        wire[0].Length.Should().BeLessThan(1024 * 1024);
+        var decoder = new ZrleDecoder();
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        var act = () => decoder.Decode(new RfbReader(new MemoryStream(wire[0])), new Framebuffer(4, 4), new RfbRect(0, 0, 4, 4));
+
+        act.Should().Throw<RfbProtocolException>().WithMessage("*inflates to more than*");
+        (GC.GetAllocatedBytesForCurrentThread() - before).Should().BeLessThan(8 * 1024 * 1024);
+    }
+
+    [Fact]
+    public void ZlibInflater_RejectsUnreadInputBeyondLimit()
+    {
+        using var inflater = new ZlibInflater(maxPendingLength: 1000);
+        var reader = new RfbReader(new MemoryStream(new byte[1200]));
+        inflater.Append(reader, 600);
+
+        var act = () => inflater.Append(reader, 600);
+
+        act.Should().Throw<RfbProtocolException>();
+    }
+
     // ── Framebuffer ────────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(65535, 65535)]
+    [InlineData(Framebuffer.MaxDimension + 1, 1)]
+    [InlineData(1, Framebuffer.MaxDimension + 1)]
+    public void Framebuffer_Resize_RejectsOversizedDesktop(int width, int height)
+    {
+        var fb = new Framebuffer(10, 10);
+
+        var act = () => fb.Resize(width, height);
+
+        act.Should().Throw<RfbProtocolException>();
+        fb.Width.Should().Be(10);
+        fb.Pixels.Length.Should().Be(100);
+    }
 
     [Fact]
     public void Framebuffer_CoalescesDirtyRectangles()
