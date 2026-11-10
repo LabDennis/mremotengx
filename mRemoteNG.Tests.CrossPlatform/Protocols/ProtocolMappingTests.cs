@@ -163,11 +163,54 @@ public class ProtocolMappingTests
     [InlineData(ProtocolType.Http, "https://site.example/path", 80, "https://site.example/path")]
     [InlineData(ProtocolType.Https, "https://site.example:8443/", 443, "https://site.example:8443/")]
     [InlineData(ProtocolType.Https, "https://site.example/", 8443, "https://site.example:8443/")]
+    [InlineData(ProtocolType.Http, "intranet/login?next=https://portal.example", 80, "http://intranet/login?next=https://portal.example")]
     public void WebUrlBuilder_BuildsUrl(ProtocolType protocol, string host, int port, string expected)
     {
         var p = new ConnectionParameters { Hostname = host, Port = port, Protocol = protocol };
 
         WebUrlBuilder.Build(p).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(ProtocolType.Http, "file:///C:/Windows/System32/calc.exe")]
+    [InlineData(ProtocolType.Https, "ms-settings://x")]
+    [InlineData(ProtocolType.Http, "javascript://alert(1)")]
+    [InlineData(ProtocolType.Https, "\\\\server\\share\\payload.exe://x")]
+    [InlineData(ProtocolType.Http, "ftp://files.example/")]
+    public void WebUrlBuilder_NonWebScheme_Throws(ProtocolType protocol, string host)
+    {
+        var p = new ConnectionParameters { Hostname = host, Port = 80, Protocol = protocol };
+
+        var build = () => WebUrlBuilder.Build(p);
+
+        build.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("https://site.example/", true)]
+    [InlineData("HTTP://site.example/", true)]
+    [InlineData("file:///C:/Windows/System32/calc.exe", false)]
+    [InlineData("ms-settings://x", false)]
+    [InlineData("C:\\Windows\\System32\\calc.exe", false)]
+    [InlineData("site.example", false)]
+    public void WebUrlBuilder_TryParseWebUrl_AllowsOnlyHttpAndHttps(string url, bool expected) =>
+        WebUrlBuilder.TryParseWebUrl(url, out _).Should().Be(expected);
+
+    [Fact]
+    public async Task ExternalBrowser_NonWebSchemeHostname_IsNotLaunched()
+    {
+        string? launched = null;
+        using var protocol = new ExternalBrowserProtocol(NullLogger<ExternalBrowserProtocol>.Instance, url =>
+        {
+            launched = url;
+            return true;
+        });
+
+        var connect = () => protocol.ConnectAsync(
+            new ConnectionParameters { Hostname = "file:///C:/Windows/System32/calc.exe", Port = 80, Protocol = ProtocolType.Http });
+
+        await connect.Should().ThrowAsync<ArgumentException>();
+        launched.Should().BeNull();
     }
 
     [Fact]
