@@ -322,6 +322,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             node.VNCColors = GetEnum(e, "VNCColors", VncColors.ColNormal);
             node.VNCSmartSizeMode = GetEnum(e, "VNCSmartSizeMode", VncSmartSizeMode.SmartSAspect);
             node.VNCViewOnly = GetBool(e, "VNCViewOnly", false);
+            node.VNCAllowCleartextPassword = GetBool(e, "VNCAllowCleartextPassword", false);
 
             // Misc
             node.ExtApp = GetAttr(e, "ExtApp", "");
@@ -422,6 +423,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             inh.VNCColors = GetBool(e, "InheritVNCColors", false);
             inh.VNCSmartSizeMode = GetBool(e, "InheritVNCSmartSizeMode", false);
             inh.VNCViewOnly = GetBool(e, "InheritVNCViewOnly", false);
+            inh.VNCAllowCleartextPassword = GetBool(e, "InheritVNCAllowCleartextPassword", false);
             inh.RDGatewayUsageMethod = GetBool(e, "InheritRDGatewayUsageMethod", false);
             inh.RDGatewayHostname = GetBool(e, "InheritRDGatewayHostname", false);
             inh.RDGatewayUseConnectionCredentials = GetBool(e, "InheritRDGatewayUseConnectionCredentials", false);

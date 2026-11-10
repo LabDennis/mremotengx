@@ -117,6 +117,7 @@ namespace mRemoteNG.Core.Connection
         private VncColors _vncColors;
         private VncSmartSizeMode _vncSmartSizeMode;
         private bool _vncViewOnly;
+        private bool _vncAllowCleartextPassword;
 
         private ConnectionInfoInheritance _inheritance;
         private readonly Dictionary<string, string> _pluginProperties = new(StringComparer.OrdinalIgnoreCase);
@@ -685,6 +686,13 @@ namespace mRemoteNG.Core.Connection
         {
             get => GetPropertyValue(nameof(VNCViewOnly), _vncViewOnly);
             set => SetField(ref _vncViewOnly, value);
+        }
+
+        /// <summary>Allows VeNCrypt Plain, which sends the user name and password unencrypted.</summary>
+        public bool VNCAllowCleartextPassword
+        {
+            get => GetPropertyValue(nameof(VNCAllowCleartextPassword), _vncAllowCleartextPassword);
+            set => SetField(ref _vncAllowCleartextPassword, value);
         }
 
         // Non-browsable

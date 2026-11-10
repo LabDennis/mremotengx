@@ -324,6 +324,7 @@ public static class ConnectionParametersFactory
             _ => "fit",
         };
         extras[Keys.VncViewOnly] = Bool(info.VNCViewOnly);
+        extras[Keys.VncAllowCleartextPassword] = Bool(info.VNCAllowCleartextPassword);
         extras[Keys.VncEncoding] = info.VNCEncoding switch
         {
             VncEncoding.EncRaw => "raw",

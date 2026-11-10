@@ -234,6 +234,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("VNCColors", node.VNCColors.ToString());
             element.SetAttribute("VNCSmartSizeMode", node.VNCSmartSizeMode.ToString());
             element.SetAttribute("VNCViewOnly", node.VNCViewOnly.ToString().ToLowerInvariant());
+            element.SetAttribute("VNCAllowCleartextPassword", node.VNCAllowCleartextPassword.ToString().ToLowerInvariant());
 
             // HTTP
 
@@ -333,6 +334,7 @@ namespace mRemoteNG.Core.Config.Serializers.Xml
             element.SetAttribute("InheritVNCColors", inh.VNCColors.ToString().ToLowerInvariant());
             element.SetAttribute("InheritVNCSmartSizeMode", inh.VNCSmartSizeMode.ToString().ToLowerInvariant());
             element.SetAttribute("InheritVNCViewOnly", inh.VNCViewOnly.ToString().ToLowerInvariant());
+            element.SetAttribute("InheritVNCAllowCleartextPassword", inh.VNCAllowCleartextPassword.ToString().ToLowerInvariant());
             element.SetAttribute("InheritRDGatewayUsageMethod", inh.RDGatewayUsageMethod.ToString().ToLowerInvariant());
             element.SetAttribute("InheritRDGatewayHostname", inh.RDGatewayHostname.ToString().ToLowerInvariant());
             element.SetAttribute("InheritRDGatewayUseConnectionCredentials", inh.RDGatewayUseConnectionCredentials.ToString().ToLowerInvariant());

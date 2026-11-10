@@ -233,6 +233,8 @@ namespace mRemoteNG.Core.Config.Serializers.Sql
             new SqlColumn("InheritRDGatewayAccessToken", SqlColumnKind.Bool, Nullable: true, IsExtension: true),
             new SqlColumn("UseRedirectionServerName", SqlColumnKind.Bool, Nullable: true, IsExtension: true),
             new SqlColumn("InheritUseRedirectionServerName", SqlColumnKind.Bool, Nullable: true, IsExtension: true),
+            new SqlColumn("VNCAllowCleartextPassword", SqlColumnKind.Bool, Nullable: true, IsExtension: true),
+            new SqlColumn("InheritVNCAllowCleartextPassword", SqlColumnKind.Bool, Nullable: true, IsExtension: true),
         ];
 
         /// <summary>

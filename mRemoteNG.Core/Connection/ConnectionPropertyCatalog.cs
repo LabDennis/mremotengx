@@ -694,6 +694,9 @@ namespace mRemoteNG.Core.Connection
                 "How the remote screen is scaled to the window.", ConnectionPropertyEditor.Choice, Vnc);
             Add(nameof(ConnectionInfo.VNCViewOnly), protocol, vnc, "View only",
                 "Do not send keyboard or mouse input.", ConnectionPropertyEditor.Boolean, Vnc);
+            Add(nameof(ConnectionInfo.VNCAllowCleartextPassword), protocol, vnc, "Allow clear-text password",
+                "Allow VeNCrypt Plain, which sends the user name and password unencrypted. Only for trusted networks.",
+                ConnectionPropertyEditor.Boolean, Vnc);
 
             const string vncProxy = "VNC proxy";
             Add(nameof(ConnectionInfo.VNCProxyType), protocol, vncProxy, "Proxy type",

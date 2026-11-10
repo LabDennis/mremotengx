@@ -32,7 +32,7 @@ namespace mRemoteNG.Core.Config.Serializers.Csv
             "LoadBalanceInfo;Colors;Resolution;AutomaticResize;DisplayWallpaper;DisplayThemes;EnableFontSmoothing;EnableDesktopComposition;DisableFullWindowDrag;DisableMenuAnimations;DisableCursorShadow;DisableCursorBlinking;" +
             "CacheBitmaps;RedirectDiskDrives;RedirectDiskDrivesCustom;RedirectPorts;RedirectPrinters;RedirectClipboard;RedirectSmartCards;RedirectSound;RedirectKeys;" +
             "PreExtApp;PostExtApp;MacAddress;UserField;EnvironmentTags;ExtApp;Favorite;VNCCompression;VNCEncoding;VNCAuthMode;VNCProxyType;VNCProxyIP;" +
-            "VNCProxyPort;VNCProxyUsername;VNCProxyPassword;VNCColors;VNCSmartSizeMode;VNCViewOnly;RDGatewayUsageMethod;RDGatewayHostname;" +
+            "VNCProxyPort;VNCProxyUsername;VNCProxyPassword;VNCColors;VNCSmartSizeMode;VNCViewOnly;VNCAllowCleartextPassword;RDGatewayUsageMethod;RDGatewayHostname;" +
             "RDGatewayUseConnectionCredentials;RDGatewayUsername;RDGatewayPassword;RDGatewayAccessToken;RDGatewayDomain;RDGatewayExternalCredentialProvider;RDGatewayUserViaAPI;RedirectAudioCapture;RdpVersion;RDPStartProgram;RDPStartProgramWorkDir;UserViaAPI;EC2InstanceId;EC2Region;ExternalCredentialProvider;ExternalAddressProvider;PluginData;";
 
         internal const string InheritanceHeader =
@@ -43,7 +43,7 @@ namespace mRemoteNG.Core.Config.Serializers.Csv
             "InheritUseConsoleSession;InheritUseCredSsp;InheritUseRestrictedAdmin;InheritUseRCG;InheritUseRedirectionServerName;InheritUseVmId;InheritUseEnhancedMode;InheritVmId;InheritRenderingEngine;InheritTerminalBackend;InheritUsername;" +
             "InheritRDPAuthenticationLevel;InheritLoadBalanceInfo;InheritPreExtApp;InheritPostExtApp;InheritMacAddress;InheritUserField;" +
             "InheritEnvironmentTags;InheritFavorite;InheritExtApp;InheritVNCCompression;InheritVNCEncoding;InheritVNCAuthMode;InheritVNCProxyType;InheritVNCProxyIP;" +
-            "InheritVNCProxyPort;InheritVNCProxyUsername;InheritVNCProxyPassword;InheritVNCColors;InheritVNCSmartSizeMode;InheritVNCViewOnly;" +
+            "InheritVNCProxyPort;InheritVNCProxyUsername;InheritVNCProxyPassword;InheritVNCColors;InheritVNCSmartSizeMode;InheritVNCViewOnly;InheritVNCAllowCleartextPassword;" +
             "InheritRDGatewayUsageMethod;InheritRDGatewayHostname;InheritRDGatewayUseConnectionCredentials;InheritRDGatewayUsername;" +
             "InheritRDGatewayPassword;InheritRDGatewayAccessToken;InheritRDGatewayDomain;InheritRDGatewayExternalCredentialProvider;InheritRDGatewayUserViaAPI;InheritRDPAlertIdleTimeout;InheritRDPMinutesToIdleTimeout;InheritSoundQuality;InheritUserViaAPI;" +
             "InheritRedirectAudioCapture;InheritRdpVersion;InheritExternalCredentialProvider";
@@ -178,6 +178,7 @@ namespace mRemoteNG.Core.Config.Serializers.Csv
             Field(sb, con.VNCColors);
             Field(sb, con.VNCSmartSizeMode);
             Field(sb, con.VNCViewOnly);
+            Field(sb, con.VNCAllowCleartextPassword);
             Field(sb, con.RDGatewayUsageMethod);
             Field(sb, con.RDGatewayHostname);
             Field(sb, con.RDGatewayUseConnectionCredentials);
@@ -266,6 +267,7 @@ namespace mRemoteNG.Core.Config.Serializers.Csv
             Field(sb, inh.VNCColors);
             Field(sb, inh.VNCSmartSizeMode);
             Field(sb, inh.VNCViewOnly);
+            Field(sb, inh.VNCAllowCleartextPassword);
             Field(sb, inh.RDGatewayUsageMethod);
             Field(sb, inh.RDGatewayHostname);
             Field(sb, inh.RDGatewayUseConnectionCredentials);

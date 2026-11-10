@@ -596,7 +596,7 @@ public sealed class RfbClient : IDisposable
     }
 
     private const string CleartextRefusedMessage =
-        "The server only accepts the user name and password unencrypted (VeNCrypt Plain), which is refused unless the connection allows clear-text passwords.";
+        "The server only accepts the user name and password unencrypted (VeNCrypt Plain), which is refused unless \"Allow clear-text password\" is enabled for this connection.";
 
     /// <summary>
     /// The preferred VeNCrypt sub-type: TLS with a certificate first (user name and password, VNC password, then
