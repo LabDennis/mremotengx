@@ -167,8 +167,12 @@ public sealed class ExternalToolLauncher
     internal static bool RunsThroughCmd(string fileName)
     {
         string name = fileName.Trim().Trim('"');
-        // Windows drops trailing dots and spaces from a file name, so "run.bat." still starts cmd.exe.
-        name = name[(name.LastIndexOfAny(['\\', '/']) + 1)..].TrimEnd('.', ' ');
+        // Windows drops trailing dots and spaces from a file name, so "run.bat." still starts cmd.exe;
+        // a \\?\ path is not normalized and keeps them.
+        bool normalized = !name.StartsWith(@"\\?\", StringComparison.Ordinal);
+        name = name[(name.LastIndexOfAny(['\\', '/']) + 1)..];
+        if (normalized)
+            name = name.TrimEnd('.', ' ');
         return name.Equals("cmd", StringComparison.OrdinalIgnoreCase)
             || name.Equals("cmd.exe", StringComparison.OrdinalIgnoreCase)
             || name.EndsWith(".bat", StringComparison.OrdinalIgnoreCase)
