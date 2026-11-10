@@ -2128,4 +2128,10 @@ Use “Salir de pantalla completa” en la parte superior de esa ventana para re
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Más carpetas desde las que cargar complementos, separadas por punto y coma (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Permitir contraseña sin cifrar</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Permite VeNCrypt Plain, que envía el nombre de usuario y la contraseña sin cifrar. Solo para redes de confianza.</value>
+  </data>
 </root>

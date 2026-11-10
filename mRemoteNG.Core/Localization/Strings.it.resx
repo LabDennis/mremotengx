@@ -2128,4 +2128,10 @@ Usa “Esci da schermo intero” in cima a quella finestra per riportarla qui.</
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Altre cartelle da cui caricare i plugin, separate da punto e virgola (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Consenti password in chiaro</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Consente VeNCrypt Plain, che invia nome utente e password senza crittografia. Solo per reti attendibili.</value>
+  </data>
 </root>

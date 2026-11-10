@@ -291,9 +291,10 @@ namespace mRemoteNG.Core.Connection
     public static class ConnectionPropertyCatalog
     {
         /// <summary>
-        /// The WinForms app's Language.resx keys (property grid name and description) whose translations are
-        /// shown for each property; the English text stays the catalog's own. Declared before <see cref="All"/>,
-        /// which uses it while being built. Properties not listed (or a null key) are shown in English.
+        /// The resource keys (property grid name and description) whose translations are shown for each property:
+        /// the WinForms app's Language.resx keys, or Strings.resx keys for properties new in this app. The English
+        /// text stays the catalog's own. Declared before <see cref="All"/>, which uses it while being built.
+        /// Properties not listed (or a null key) are shown in English.
         /// </summary>
         internal static readonly Dictionary<string, (string? Name, string? Description)> LegacyResourceKeys = new(StringComparer.Ordinal)
         {
@@ -373,6 +374,7 @@ namespace mRemoteNG.Core.Connection
             [nameof(ConnectionInfo.VNCColors)] = ("Colors", "PropertyDescriptionColors"),
             [nameof(ConnectionInfo.VNCSmartSizeMode)] = ("SmartSizeMode", "PropertyDescriptionSmartSizeMode"),
             [nameof(ConnectionInfo.VNCViewOnly)] = ("ViewOnly", "PropertyDescriptionViewOnly"),
+            [nameof(ConnectionInfo.VNCAllowCleartextPassword)] = ("VncAllowCleartextPassword", "VncAllowCleartextPasswordDescription"),
             [nameof(ConnectionInfo.VNCProxyType)] = ("ProxyType", "PropertyDescriptionVNCProxyType"),
             [nameof(ConnectionInfo.VNCProxyIP)] = ("ProxyAddress", "PropertyDescriptionVNCProxyAddress"),
             [nameof(ConnectionInfo.VNCProxyPort)] = ("ProxyPort", "PropertyDescriptionVNCProxyPort"),

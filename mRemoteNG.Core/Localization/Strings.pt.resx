@@ -2131,4 +2131,10 @@ Use “Sair do ecrã completo” no topo dessa janela para a trazer de volta.</v
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Mais pastas de onde carregar plugins, separadas por ponto e vírgula (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Permitir palavra-passe em texto simples</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Permite o VeNCrypt Plain, que envia o nome de utilizador e a palavra-passe sem encriptação. Apenas para redes fidedignas.</value>
+  </data>
 </root>

@@ -2128,4 +2128,10 @@ Utilisez “Quitter le plein écran” en haut de cette fenêtre pour la ramener
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Autres dossiers depuis lesquels charger des plugins, séparés par des points-virgules (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Autoriser le mot de passe en clair</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Autorise VeNCrypt Plain, qui envoie le nom d'utilisateur et le mot de passe sans chiffrement. Uniquement pour les réseaux de confiance.</value>
+  </data>
 </root>

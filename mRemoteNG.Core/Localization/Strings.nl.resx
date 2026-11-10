@@ -2128,4 +2128,10 @@ Gebruik “Volledig scherm afsluiten” bovenaan dat venster om deze terug te ha
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Meer mappen om plug-ins uit te laden, gescheiden door puntkomma's (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Wachtwoord als platte tekst toestaan</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Staat VeNCrypt Plain toe, dat de gebruikersnaam en het wachtwoord onversleuteld verzendt. Alleen voor vertrouwde netwerken.</value>
+  </data>
 </root>

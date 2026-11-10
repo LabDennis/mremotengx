@@ -2131,4 +2131,10 @@ Use “Sair da tela cheia” no topo daquela janela para trazê-la de volta.</va
   <data name="AdditionalPluginFoldersDescription" xml:space="preserve">
     <value>Mais pastas para carregar plug-ins, separadas por ponto e vírgula (;).</value>
   </data>
+  <data name="VncAllowCleartextPassword" xml:space="preserve">
+    <value>Permitir senha em texto simples</value>
+  </data>
+  <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
+    <value>Permite o VeNCrypt Plain, que envia o nome de usuário e a senha sem criptografia. Somente para redes confiáveis.</value>
+  </data>
 </root>
