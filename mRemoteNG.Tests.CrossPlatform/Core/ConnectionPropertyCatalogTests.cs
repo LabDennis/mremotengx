@@ -149,7 +149,9 @@ public class ConnectionPropertyCatalogTests
         text.SetPluginValue(node, "hello");
         node.PluginProperties.Should().BeEquivalentTo(new Dictionary<string, string>
         {
-            ["p.flag"] = "True", ["p.count"] = "-7", ["p.text"] = "hello",
+            ["p.flag"] = "True",
+            ["p.count"] = "-7",
+            ["p.text"] = "hello",
         });
         (flag.GetPluginValue(node), count.GetPluginValue(node), text.GetPluginValue(node)).Should().Be((true, -7, "hello"));
 

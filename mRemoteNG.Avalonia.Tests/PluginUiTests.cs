@@ -67,7 +67,8 @@ public class PluginUiTests
 
             connection.PluginProperties.Should().BeEquivalentTo(new Dictionary<string, string>
             {
-                ["test.rdpFlag"] = "True", ["test.alias"] = "new",
+                ["test.rdpFlag"] = "True",
+                ["test.alias"] = "new",
             }, "the untouched number keeps its default without being stored");
         }
         finally

@@ -182,8 +182,5 @@ namespace mRemoteNGTests.UI.Forms
                 Application.DoEvents();
             });
         }
-
-        private static IEnumerable<Control> AllControls(Control parent) =>
-            parent.Controls.Cast<Control>().SelectMany(control => new[] { control }.Concat(AllControls(control)));
     }
 }

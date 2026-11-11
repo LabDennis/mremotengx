@@ -75,7 +75,7 @@ jobs:
           - os: macOS
             arch: x64
             rid: osx-x64
-            runner: macos-13
+            runner: macos-latest   # macos-13 is retired; cross-publishes osx-x64 on Apple silicon
             artifact_suffix: macos-x64
 
           # Windows x64

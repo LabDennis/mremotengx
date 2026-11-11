@@ -290,10 +290,9 @@ namespace mRemoteNGTests.Connection.Protocol
             // Assert
             Assert.That(resizeCallsWhileMinimized, Is.EqualTo(0),
                 "DoResizeClient should not be called when minimizing");
-            // Resize() skips a minimized window without recording it, so a window restored to the
-            // state it had keeps the size it had, and the session is not resized again.
-            Assert.That(_rdpProtocol.DoResizeClientCallCount, Is.EqualTo(0),
-                "DoResizeClient should not be called when restoring to the state the window had before minimizing");
+            // Resize() records the minimized state, so the restore counts as a state change (050b93ecc).
+            Assert.That(_rdpProtocol.DoResizeClientCallCount, Is.EqualTo(1),
+                "DoResizeClient should be called when restoring from minimize");
         }
 
         [Test]

@@ -337,7 +337,9 @@ public sealed class MySqlConnectionsStoreTests
         var root = new RootNodeInfo(RootNodeType.Connection);
         var ssh = new ConnectionInfo
         {
-            Name = "ssh", Hostname = "h", Protocol = mRemoteNG.Core.Connection.Protocol.ProtocolType.SSH2,
+            Name = "ssh",
+            Hostname = "h",
+            Protocol = mRemoteNG.Core.Connection.Protocol.ProtocolType.SSH2,
             TerminalBackend = mRemoteNG.Core.Connection.Protocol.TerminalBackend.WindowsTerminal,
         };
         ssh.Inheritance.TerminalBackend = true;
