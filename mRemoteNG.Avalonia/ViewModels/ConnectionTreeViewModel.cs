@@ -346,6 +346,7 @@ public sealed class ConnectionTreeViewModel : ReactiveObject
     private Dictionary<ContainerInfo, bool>? _expansionBeforeSearch;
     private bool _filterRefreshPending;
     private ConnectionNodeViewModel? _selectedNode;
+    private ConnectionDialogViewModel? _config;
     private ConnectionInfo? _cutNode;
     private bool _isDirty;
     private SessionsDockable? _sessionsDock;
@@ -425,6 +426,37 @@ public sealed class ConnectionTreeViewModel : ReactiveObject
         CreateNewTree();
         if (_puttySessionsTree is not null)
             RefreshPuttySessionsCommand.Execute().Subscribe(_ => { }, _ => { });
+        this.WhenAnyValue(x => x.SelectedNode).Subscribe(_ => RefreshConfig());
+    }
+
+    /// <summary>
+    /// The Config panel under the tree: the selected connection's or folder's properties, written to the node as
+    /// they are edited (the WinForms property grid). Null for the root, PuTTY sessions and no selection.
+    /// </summary>
+    public ConnectionDialogViewModel? Config
+    {
+        get => _config;
+        private set => this.RaiseAndSetIfChanged(ref _config, value);
+    }
+
+    /// <summary>Rebuilds <see cref="Config"/> for the selected node (selection changed, or it was edited elsewhere).</summary>
+    public void RefreshConfig()
+    {
+        // ponytail: a fresh editor (~200 fields) per selection; reuse or throttle it if arrowing through the tree lags
+        if (SelectedNode is not { IsReadOnly: false, IsRoot: false } node)
+        {
+            Config = null;
+            return;
+        }
+        var editor = new ConnectionDialogViewModel(node.Model, node.Model.Parent, isNew: false, CreateDialogOptions());
+        editor.FieldEdited += (_, field) =>
+        {
+            if (!editor.ApplyField(field)) return;
+            _tracker?.MarkDirty();
+            foreach (var vm in node.SelfAndDescendants())
+                vm.RefreshDisplay();
+        };
+        Config = editor;
     }
 
     public ObservableCollection<ConnectionNodeViewModel> Nodes { get; } = [];
@@ -975,6 +1007,7 @@ public sealed class ConnectionTreeViewModel : ReactiveObject
             _tracker?.MarkDirty();
             foreach (var vm in node.SelfAndDescendants())
                 vm.RefreshDisplay();
+            RefreshConfig();
         }
     }
 
@@ -996,6 +1029,8 @@ public sealed class ConnectionTreeViewModel : ReactiveObject
         var name = node.EditName.Trim();
         if (name.Length == 0 || name == node.Name) return false;
         node.Model.Name = name;
+        if (ReferenceEquals(node, SelectedNode))
+            RefreshConfig();
         return true;
     }
 

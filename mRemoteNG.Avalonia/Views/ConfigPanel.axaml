@@ -1,0 +1,130 @@
+<!-- The Config panel under the connection tree: the selected node's properties as a two-column property grid,
+     grouped like the connection editor's pages. Every edit is written to the node at once (ConnectionTreeViewModel.Config). -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:mRemoteNG.Avalonia.Localization"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:vm="using:mRemoteNG.Avalonia.ViewModels"
+             x:Class="mRemoteNG.Avalonia.Views.ConfigPanel"
+             x:DataType="vm:ConnectionDialogViewModel"
+             IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="EnumItemTemplate">
+            <TextBlock Text="{ReflectionBinding Converter={x:Static vm:EnumLabelConverter.Instance}}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- ponytail: compact copies of the connection editor's templates (ConnectionDialog.axaml) -->
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="vm:SuggestFieldViewModel">
+            <AutoCompleteBox Classes="suggest" Text="{Binding Value, Mode=TwoWay}" ItemsSource="{Binding Suggestions}"
+                             FilterMode="ContainsOrdinal" MinimumPrefixLength="0"/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:TextFieldViewModel">
+            <TextBox Text="{Binding Value}" PasswordChar="{Binding PasswordChar}" Classes.error="{Binding HasError}"/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:BoolFieldViewModel">
+            <CheckBox IsChecked="{Binding Value}"/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:NumberFieldViewModel">
+            <NumericUpDown Value="{Binding Value}" Minimum="{Binding Minimum}" Maximum="{Binding Maximum}"
+                           FormatString="0" Increment="1" ShowButtonSpinner="False"/>
+        </DataTemplate>
+        <DataTemplate DataType="vm:ChoiceFieldViewModel">
+            <ComboBox ItemsSource="{Binding Options}" SelectedItem="{Binding Value}" HorizontalAlignment="Stretch"
+                      ItemTemplate="{StaticResource EnumItemTemplate}"/>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <UserControl.Styles>
+        <Style Selector="Border.pg-category">
+            <Setter Property="Background" Value="{DynamicResource AppBg2Brush}"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+        <Style Selector="Border.pg-category > TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Grid.pg-row">
+            <Setter Property="Margin" Value="8,1,4,1"/>
+        </Style>
+        <!-- Property-grid density: lower editors than the connection editor's -->
+        <Style Selector="Grid.pg-row TextBox">
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+        <Style Selector="Grid.pg-row ComboBox">
+            <Setter Property="MinHeight" Value="24"/>
+            <Setter Property="Padding" Value="6,1,0,1"/>
+        </Style>
+        <Style Selector="Grid.pg-row NumericUpDown">
+            <Setter Property="MinHeight" Value="24"/>
+        </Style>
+        <Style Selector="Grid.pg-row NumericUpDown TextBox">
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Grid.pg-row ToggleButton.inherit">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+        </Style>
+        <Style Selector="Grid.pg-row TextBlock.pg-label">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+        <Style Selector="TextBlock.pg-label.inherited">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Padding="8,0,8,6">
+            <TextBox x:Name="ConfigSearchBox" Classes="search" Text="{Binding SearchText}"
+                     Watermark="{l:Tr SearchPropertiesWatermark}"/>
+        </Border>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Pages}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PropertyPageViewModel">
+                        <StackPanel>
+                            <StackPanel.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="IsVisible"/>
+                                    <Binding Path="!IsInheritance"/>
+                                </MultiBinding>
+                            </StackPanel.IsVisible>
+                            <Border Classes="pg-category">
+                                <TextBlock Text="{Binding Title}"/>
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding Sections}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PropertySectionViewModel">
+                                        <ItemsControl ItemsSource="{Binding Fields}" IsVisible="{Binding IsVisible}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:PropertyFieldViewModel">
+                                                    <Grid Classes="pg-row" ColumnDefinitions="2*,3*,28" IsVisible="{Binding IsShown}">
+                                                        <TextBlock Classes="pg-label" Classes.inherited="{Binding !IsEditable}"
+                                                                   Text="{Binding DisplayName}" ToolTip.Tip="{Binding Description}"/>
+                                                        <ContentControl Grid.Column="1" Content="{Binding}" IsEnabled="{Binding IsEditable}"
+                                                                        ToolTip.Tip="{Binding Error}"/>
+                                                        <ToggleButton Grid.Column="2" Classes="inherit" Margin="4,0,0,0"
+                                                                      IsVisible="{Binding SupportsInheritance}"
+                                                                      IsEnabled="{Binding CanInherit}"
+                                                                      IsChecked="{Binding Inherit}"
+                                                                      ToolTip.Tip="{Binding InheritTip}">
+                                                            <mi:MaterialIcon/>
+                                                        </ToggleButton>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

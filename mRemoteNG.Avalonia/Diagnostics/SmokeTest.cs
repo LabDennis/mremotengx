@@ -397,6 +397,17 @@ public sealed class SmokeTest
                 return $"\"{query}\": {results} result(s)";
             });
 
+            await StepAsync("config-panel", "Config panel shows the selected connection", async () =>
+            {
+                // Selected before the renders below, so they show the Config panel filled.
+                var tree = vm.ConnectionTree;
+                if (tree.Nodes.SelectMany(n => n.SelfAndDescendants()).FirstOrDefault(n => n is { IsFolder: false, IsReadOnly: false }) is not { } node)
+                    return "No connection to select";
+                tree.SelectedNode = node;
+                await WaitUntilAsync(() => tree.Config is not null, UiTimeout, "the Config panel to fill");
+                return $"\"{node.Name}\": {tree.Config!.Fields.Count(f => f.IsShown)} properties";
+            });
+
             await StepAsync("theme-dark", "Dark theme applied and rendered", async () =>
             {
                 if (!vm.IsDarkTheme)

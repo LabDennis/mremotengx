@@ -96,7 +96,7 @@ public sealed class VncListenerTests
     [Trait("Category", "Integration")]
     public async Task X11vncConnect_OpensASession()
     {
-        const int display = 136;
+        const int display = 137; // :136 belongs to X11VncFileTransferIntegrationTests, which may run at the same time
         const int port = 5501;
         var xvfbPath = ExternalProcess.FindExecutable("Xvfb");
         var x11vncPath = ExternalProcess.FindExecutable("x11vnc");

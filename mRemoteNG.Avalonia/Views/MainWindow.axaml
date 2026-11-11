@@ -385,6 +385,13 @@
                     Background="{DynamicResource AppBg1Brush}"
                     BorderBrush="{DynamicResource Border0Brush}"
                     BorderThickness="0,0,1,0">
+              <!-- Connections above Config, as in the WinForms app's default layout -->
+              <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="120"/>
+                    <RowDefinition Height="4"/>
+                    <RowDefinition Height="320" MinHeight="80"/>
+                </Grid.RowDefinitions>
                 <DockPanel>
                     <Border DockPanel.Dock="Top" Classes="panel-header">
                         <Grid ColumnDefinitions="*,Auto,Auto,Auto">
@@ -418,6 +425,23 @@
 
                     <views:ConnectionTreeView x:Name="ConnectionTreePane" DataContext="{Binding ConnectionTree}"/>
                 </DockPanel>
+
+                <GridSplitter x:Name="ConfigSplitter" Grid.Row="1" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"/>
+
+                <DockPanel Grid.Row="2" x:Name="ConfigPanelHost">
+                    <Border DockPanel.Dock="Top" Classes="panel-header">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{l:Tr Config, Upper=True}" Classes="overline" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Classes="icon"
+                                    ToolTip.Tip="{l:Tr EditSelected, Suffix='...'}"
+                                    Command="{Binding ConnectionTree.EditSelectedCommand}">
+                                <mi:MaterialIcon Kind="OpenInNew"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <views:ConfigPanel x:Name="ConfigPane" DataContext="{Binding ConnectionTree.Config}"/>
+                </DockPanel>
+              </Grid>
             </Border>
 
             <!-- COLUMN SPLITTER -->

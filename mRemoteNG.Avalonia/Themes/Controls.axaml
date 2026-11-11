@@ -24,11 +24,11 @@
             <!-- Typography (ThemeService overrides UiFontFamily/UiFontSize from Options > Appearance) -->
             <FontFamily x:Key="UiFontFamily">fonts:Inter#Inter, $Default</FontFamily>
             <FontFamily x:Key="MonoFontFamily">JetBrains Mono, Cascadia Mono, DejaVu Sans Mono, Consolas, Menlo, monospace</FontFamily>
-            <sys:Double x:Key="UiFontSize">13</sys:Double>
+            <sys:Double x:Key="UiFontSize">12</sys:Double>
 
             <!-- Fluent metrics (the Fluent templates read these keys) -->
             <FontFamily x:Key="ContentControlThemeFontFamily">fonts:Inter#Inter, $Default</FontFamily>
-            <sys:Double x:Key="ControlContentThemeFontSize">13</sys:Double>
+            <sys:Double x:Key="ControlContentThemeFontSize">12</sys:Double>
             <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
             <CornerRadius x:Key="OverlayCornerRadius">8</CornerRadius>
             <Thickness x:Key="ButtonPadding">14,6,14,6</Thickness>
@@ -52,7 +52,7 @@
             <sys:Double x:Key="ToolTipContentThemeFontSize">12</sys:Double>
             <sys:Double x:Key="TreeViewItemMinHeight">28</sys:Double>
             <sys:Double x:Key="TabItemMinHeight">36</sys:Double>
-            <sys:Double x:Key="TabItemHeaderFontSize">13</sys:Double>
+            <sys:Double x:Key="TabItemHeaderFontSize">12</sys:Double>
             <FontWeight x:Key="TabItemHeaderThemeFontWeight">Medium</FontWeight>
             <Thickness x:Key="TabItemHeaderMargin">12,0,12,0</Thickness>
             <Thickness x:Key="ExpanderHeaderPadding">16,0,0,0</Thickness>
@@ -109,7 +109,7 @@
     </Style>
     <Style Selector=":is(TextBlock).mono">
         <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}"/>
-        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="FontSize" Value="12"/>
     </Style>
     <Style Selector=":is(TextBlock).muted">
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
@@ -296,7 +296,7 @@
     </Style>
     <Style Selector="TextBox.mono">
         <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}"/>
-        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="FontSize" Value="12"/>
     </Style>
 
     <!-- Search field: leading magnifier, trailing clear button when non-empty, height 30 -->
@@ -594,7 +594,7 @@
     <Style Selector="TabItem">
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="MinHeight" Value="36"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="12"/>
     </Style>
 
     <!-- ═══ ToolTip, ScrollBar, GridSplitter, Expander ══════════════════════════════════════ -->
@@ -651,7 +651,7 @@
         <Setter Property="MinHeight" Value="30"/>
     </Style>
     <Style Selector="DataGridCell">
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="12"/>
     </Style>
 
     <!-- ═══ Surfaces (Border classes) ═════════════════════════════════════════════════════ -->

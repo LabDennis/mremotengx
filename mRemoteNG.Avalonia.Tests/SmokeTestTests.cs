@@ -33,7 +33,7 @@ public class SmokeTestTests
                 string.Join("; ", smoke.Report.Steps.Select(s => $"{s.Id}: {s.Status} {s.Error}")));
             smoke.Report.Steps.Select(s => s.Id).Should().Equal(
                 "setup", "main-window", "connections", "session", "options", "command-palette",
-                "theme-dark", "theme-light", "theme-dark-again");
+                "config-panel", "theme-dark", "theme-light", "theme-dark-again");
             smoke.Report.ExpectedConnections.Should().Be(4);
             SmokeTest.ExitCodeFor(smoke.Report).Should().Be(SmokeTest.ExitPassed);
             // (The headless test renderer writes no PNG; the published app's renderer does, checked in CI.)

@@ -243,8 +243,8 @@ public class DesignSystemTests
 
             ThemeService.Instance.ApplySettings(settings.Current);
             Dispatcher.UIThread.RunJobs();
-            window.FontSize.Should().Be(13, "the default settings restore the design's size");
-            body.FontFamily.Name.Should().Contain("Inter");
+            window.FontSize.Should().Be(12, "the default settings restore the design's size");
+            body.FontFamily.Name.Should().Contain(OperatingSystem.IsWindows() ? "Segoe UI" : "Inter");
         }
         finally
         {

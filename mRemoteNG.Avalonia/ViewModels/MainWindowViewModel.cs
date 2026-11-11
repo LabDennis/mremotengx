@@ -48,7 +48,7 @@ public sealed class MainWindowViewModel : ReactiveObject
     private readonly LogPanelDockable _log;
     private readonly DebugConsoleDockable _debug;
 
-    private string _title = "mRemoteNG";
+    private string _title = "mRemoteNGx";
     private int _activeConnectionCount;
     private string _quickConnectHost = string.Empty;
     private CoreProtocolType _quickConnectProtocol = CoreProtocolType.SSH2;
@@ -489,7 +489,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         var path = ConnectionTree.CurrentFilePath;
         var document = ConnectionTree.DatabaseName
                        ?? (path is null ? Localizer.Get("Untitled") : System.IO.Path.GetFileName(path));
-        var title = $"mRemoteNG — {document}{(ConnectionTree.IsDirty ? "*" : "")}";
+        var title = $"mRemoteNGx — {document}{(ConnectionTree.IsDirty ? "*" : "")}";
         if (ActiveConnectionCount > 0)
             title += " " + Localizer.Format(ActiveConnectionCount == 1 ? "TitleOneActiveConnection" : "TitleActiveConnectionsFormat",
                 ActiveConnectionCount);

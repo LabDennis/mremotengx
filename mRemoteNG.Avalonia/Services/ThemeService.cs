@@ -338,9 +338,12 @@ public sealed class ThemeService : ReactiveObject
         var resources = app.Resources;
         var defaults = new AppSettings();
 
-        if (!string.IsNullOrWhiteSpace(settings.FontFamily))
+        // Windows defaults to Segoe UI, the WinForms app's font.
+        var familyName = !string.IsNullOrWhiteSpace(settings.FontFamily) ? settings.FontFamily.Trim()
+            : OperatingSystem.IsWindows() ? "Segoe UI" : null;
+        if (familyName is not null)
         {
-            var family = new FontFamily(settings.FontFamily.Trim() + ", " + DefaultUiFontFamily);
+            var family = new FontFamily(familyName + ", " + DefaultUiFontFamily);
             resources["UiFontFamily"] = family;
             resources["ContentControlThemeFontFamily"] = family;
         }

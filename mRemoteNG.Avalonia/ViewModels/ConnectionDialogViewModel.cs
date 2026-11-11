@@ -477,6 +477,37 @@ public sealed class ConnectionDialogViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(HeaderIconBrush));
             this.RaisePropertyChanged(nameof(HeaderTintBrush));
         }
+        if (sender is PropertyFieldViewModel edited)
+            FieldEdited?.Invoke(this, edited);
+    }
+
+    /// <summary>
+    /// A field's value or inheritance flag was edited (after validation). The Config panel writes it to the node at
+    /// once with <see cref="ApplyField"/>, as the WinForms property grid does.
+    /// </summary>
+    public event EventHandler<PropertyFieldViewModel>? FieldEdited;
+
+    /// <summary>Writes one field to the node; false (nothing written) while the field is invalid.</summary>
+    public bool ApplyField(PropertyFieldViewModel field)
+    {
+        if (field.Error is not null)
+            return false;
+        var text = (field.OwnValue as string ?? string.Empty).Trim();
+        switch (field.Name)
+        {
+            case nameof(ConnectionInfo.Name) when text.Length == 0:
+                return false;
+            case nameof(ConnectionInfo.Name):
+                _target.Name = text;
+                break;
+            case nameof(ConnectionInfo.Hostname):
+                _target.Hostname = text;
+                break;
+            default:
+                field.ApplyTo(_target);
+                break;
+        }
+        return true;
     }
 
     private static readonly HashSet<string> HeaderProperties =
