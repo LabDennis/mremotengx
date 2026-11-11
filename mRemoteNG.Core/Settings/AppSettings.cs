@@ -87,6 +87,12 @@ public sealed class AppSettings
     /// <summary>Only one running instance; a second launch exits immediately.</summary>
     [PersistedSetting("Startup")] public bool SingleInstance { get; set; }
 
+    /// <summary>
+    /// The migration assistant already offered the classic mRemoteNG's connection files at startup (it offers them
+    /// once; File ▸ Import from mRemoteNG opens it again). Not shown in the UI.
+    /// </summary>
+    [PersistedSetting("Startup")] public bool LegacyImportOffered { get; set; }
+
     /// <summary>Save the open connection file automatically when the app exits.</summary>
     [PersistedSetting("Exit")] public bool SaveConnectionsOnExit { get; set; }
 
