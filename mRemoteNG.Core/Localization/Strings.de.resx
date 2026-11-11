@@ -2134,4 +2134,25 @@ Verwenden Sie „Vollbild beenden“ oben in diesem Fenster, um sie zurückzuhol
   <data name="VncAllowCleartextPasswordDescription" xml:space="preserve">
     <value>VeNCrypt Plain erlauben, das Benutzername und Passwort unverschlüsselt sendet. Nur für vertrauenswürdige Netzwerke.</value>
   </data>
+  <data name="LegacyImportMenu" xml:space="preserve">
+    <value>Aus mRemoteNG importieren</value>
+  </data>
+  <data name="LegacyImportTitle" xml:space="preserve">
+    <value>Verbindungen aus mRemoteNG</value>
+  </data>
+  <data name="LegacyImportIntro" xml:space="preserve">
+    <value>Auf diesem Computer gibt es Verbindungsdateien des klassischen mRemoteNG. Importieren Sie die Verbindungen einer Datei in die geöffnete Datei (das Original bleibt unverändert) oder öffnen Sie die Datei selbst.</value>
+  </data>
+  <data name="LegacyImportImport" xml:space="preserve">
+    <value>_Importieren</value>
+  </data>
+  <data name="LegacyImportOpen" xml:space="preserve">
+    <value>Datei _öffnen</value>
+  </data>
+  <data name="LegacyImportNotNow" xml:space="preserve">
+    <value>_Nicht jetzt</value>
+  </data>
+  <data name="LegacyImportNoneFound" xml:space="preserve">
+    <value>Auf diesem Computer wurden keine Verbindungsdateien des klassischen mRemoteNG gefunden.</value>
+  </data>
 </root>

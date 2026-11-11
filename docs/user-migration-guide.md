@@ -35,6 +35,11 @@ Passwords in `confCons.xml` are encrypted with the file's master password (or mR
 key when no master password is set), **not** with Windows DPAPI. To move your connections to Linux or macOS,
 copy `confCons.xml` and open it with **File > Open Connection File…**. No export or re-encryption is needed.
 
+On Windows the first start offers the classic app's connection files: the file it opens (from its settings),
+then the other connection files in `%APPDATA%\mRemoteNG`. **Import** copies the connections into the open file and
+leaves the original unchanged; **Open file** uses the file itself. **File > Import from mRemoteNG…** shows the list
+again.
+
 By default the app reopens the last connection file at startup. You can change this in
 **Tools > Options > Startup & Exit**, or pass a file on the command line: `mremoteng /path/to/confCons.xml`.
 
