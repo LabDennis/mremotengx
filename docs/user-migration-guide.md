@@ -13,8 +13,8 @@ WinForms app is unchanged and remains Windows-only.
 - **UI:** Avalonia instead of WinForms. Dark, Light and "follow the system" themes.
 - **SSH / SFTP:** handled in-process by SSH.NET; PuTTYNG.exe is not used. Host keys are checked against
   `known_hosts` (see section 5).
-- **RDP:** FreeRDP (`xfreerdp3`/`xfreerdp` on Linux, `wfreerdp` on Windows, FreeRDP from Homebrew on macOS)
-  instead of the Microsoft RDP ActiveX control.
+- **RDP:** Windows uses the Microsoft Remote Desktop control, as the WinForms app does (`wfreerdp` only as a
+  fallback); Linux uses FreeRDP (`xfreerdp3`/`xfreerdp`), macOS FreeRDP from Homebrew.
 - **VNC:** a built-in VNC (RFB) client; no external viewer needed.
 - **Settings:** an XML file instead of the Windows registry.
 
