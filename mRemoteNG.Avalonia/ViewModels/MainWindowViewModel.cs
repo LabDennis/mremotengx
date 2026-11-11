@@ -281,6 +281,9 @@ public sealed class MainWindowViewModel : ReactiveObject
     public ReactiveCommand<Unit, Unit> SaveConnectionFileCommand { get; }
     public ReactiveCommand<Unit, Unit> SaveAsConnectionFileCommand { get; }
     public ReactiveCommand<Unit, Unit> ImportCommand { get; }
+
+    /// <summary>File ▸ Import from mRemoteNG: the migration assistant for the classic app's connection files.</summary>
+    public ReactiveCommand<Unit, Unit> ImportFromMremotengCommand { get; }
     public ReactiveCommand<Unit, Unit> ExportCommand { get; }
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenOptionsCommand { get; }
@@ -346,6 +349,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         SaveConnectionFileCommand = ReactiveCommand.CreateFromTask(async () => { await SaveAsync(); });
         SaveAsConnectionFileCommand = ReactiveCommand.CreateFromTask(async () => { await SaveAsAsync(); });
         ImportCommand = ReactiveCommand.CreateFromTask(OnImport);
+        ImportFromMremotengCommand = ReactiveCommand.CreateFromTask(() => OfferLegacyImportAsync(atStartup: false));
         ExportCommand = ReactiveCommand.CreateFromTask(OnExport);
         ExitCommand = ReactiveCommand.Create(() => GetMainWindow()?.Close());
         OpenOptionsCommand = ReactiveCommand.CreateFromTask(OnOpenOptions);
@@ -467,7 +471,7 @@ public sealed class MainWindowViewModel : ReactiveObject
         foreach (var command in new IHandleObservableErrors[]
                  {
                      NewFileCommand, NewConnectionCommand, OpenConnectionFileCommand, SaveConnectionFileCommand,
-                     SaveAsConnectionFileCommand, ImportCommand, ExportCommand, OpenOptionsCommand,
+                     SaveAsConnectionFileCommand, ImportCommand, ImportFromMremotengCommand, ExportCommand, OpenOptionsCommand,
                      QuickConnectCommand, OpenQuickConnectDialogCommand, AboutCommand, PortScannerCommand,
                      OpenSftpCommand, OpenGitHubCommand, OpenDocumentationCommand, ReportBugCommand,
                      CheckForUpdatesCommand, ReconnectAllCommand, DisconnectAllCommand, CloseAllSessionsCommand,
@@ -529,7 +533,12 @@ public sealed class MainWindowViewModel : ReactiveObject
         // A file on the command line wins; otherwise the startup setting (last file or a fixed one).
         if (string.IsNullOrWhiteSpace(path))
             path = AppServices.GetRequired<StartupService>().GetFileToOpenAtStartup();
-        if (string.IsNullOrWhiteSpace(path)) return;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            // Nothing to open (first start): offer the classic mRemoteNG's connections.
+            await OfferLegacyImportAsync(atStartup: true);
+            return;
+        }
         var window = GetMainWindow();
         if (window is null) return;
 
@@ -740,6 +749,49 @@ public sealed class MainWindowViewModel : ReactiveObject
         var targetNode = request.IntoSelectedFolder && selectedFolder is not null
             ? selectedFolder
             : ConnectionTree.Nodes.FirstOrDefault();
+        await ImportIntoAsync(window, request, targetNode);
+    }
+
+    /// <summary>
+    /// Migration assistant: lists the classic mRemoteNG's connection files and imports (copies the connections into
+    /// the open file) or opens the chosen one. At startup it runs once, on Windows outside portable mode, when it
+    /// finds files; File ▸ Import from mRemoteNG runs it any time.
+    /// </summary>
+    private async Task OfferLegacyImportAsync(bool atStartup)
+    {
+        var settings = AppServices.GetRequired<AppSettingsService>();
+        if (atStartup && (!OperatingSystem.IsWindows() || global::mRemoteNG.Core.App.Info.ApplicationPaths.IsPortable
+                          || settings.Current.LegacyImportOffered))
+            return;
+        var window = GetMainWindow();
+        if (window is null) return;
+
+        var files = global::mRemoteNG.Core.Config.Import.LegacyConnectionFiles.Find(
+            System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mRemoteNG"),
+            System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mRemoteNG"));
+        if (files.Count == 0)
+        {
+            if (!atStartup)
+                await new MessageDialog(Localizer.Get("LegacyImportTitle"), Localizer.Get("LegacyImportNoneFound"),
+                    new MessageDialogButton(Localizer.Get("_Ok"), "ok", IsDefault: true, IsCancel: true)).ShowDialog<string?>(window);
+            return;
+        }
+        if (atStartup)
+            settings.Update(s => s.LegacyImportOffered = true);
+
+        var choice = await new LegacyImportDialog(files).ShowDialog<LegacyImportChoice?>(window);
+        if (choice is null) return;
+        if (choice.Open)
+            await LoadConnectionFileAsync(window, choice.Path);
+        else
+            await ImportIntoAsync(window,
+                new ImportRequest(global::mRemoteNG.Core.Config.Import.ImportSourceType.MRemoteNGXml, choice.Path, IntoSelectedFolder: false),
+                ConnectionTree.Nodes.FirstOrDefault());
+    }
+
+    /// <summary>Imports into <paramref name="targetNode"/> (a folder or the root), expands it and flags the file as unsaved.</summary>
+    private async Task ImportIntoAsync(Window window, ImportRequest request, ConnectionNodeViewModel? targetNode)
+    {
         if (targetNode?.Model is not global::mRemoteNG.Core.Container.ContainerInfo targetContainer)
         {
             _log.Log("Import failed: there is no connection tree to import into.", LogLevel.Error);

@@ -65,6 +65,7 @@
                 <MenuItem Header="{l:Tr DefaultConnectionProperties, Suffix='...'}" Command="{Binding ConnectionTree.EditDefaultConnectionCommand}"/>
                 <MenuItem Header="{l:Tr ConnectionFileProperties, Suffix='...'}" Command="{Binding ConnectionTree.FilePropertiesCommand}"/>
                 <Separator/>
+                <MenuItem Header="{l:Tr LegacyImportMenu, Suffix='...'}" Command="{Binding ImportFromMremotengCommand}"/>
                 <MenuItem Header="{l:Tr ImportConnections, Suffix='...'}" Command="{Binding ImportCommand}">
                     <MenuItem.Icon><mi:MaterialIcon Kind="Import"/></MenuItem.Icon>
                 </MenuItem>

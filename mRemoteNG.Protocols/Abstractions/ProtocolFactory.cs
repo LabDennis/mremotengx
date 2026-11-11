@@ -38,6 +38,9 @@ public sealed class ProtocolFactory : IProtocolFactory
         ProtocolType.Vnc
             => _services.GetRequiredService<VncProtocol>(),
 
+        ProtocolType.Http or ProtocolType.Https when OperatingSystem.IsWindows()
+            => _services.GetRequiredService<EmbeddedBrowserProtocol>(),
+
         ProtocolType.Http or ProtocolType.Https
             => _services.GetRequiredService<ExternalBrowserProtocol>(),
 
@@ -74,6 +77,7 @@ public sealed class ProtocolFactory : IProtocolFactory
         services.TryAddSingleton<IVncCertificateVerifier>(_ => VncCertificateStore.CreateDefault());
         services.AddTransient<VncProtocol>();
         services.AddTransient<ExternalBrowserProtocol>();
+        services.AddTransient<EmbeddedBrowserProtocol>();
         services.AddTransient<PowerShellProtocol>();
         services.AddTransient<SerialProtocol>();
         services.AddTransient<ExternalAppProtocol>();

@@ -2855,4 +2855,32 @@ Use “Exit full screen” at the top of that window to bring it back.</value>
     <value>Allow VeNCrypt Plain, which sends the user name and password unencrypted. Only for trusted networks.</value>
     <comment>Connection properties &gt; VNC</comment>
   </data>
+  <data name="LegacyImportMenu" xml:space="preserve">
+    <value>Import from mRemoteNG</value>
+    <comment>Main menu: File (migration assistant)</comment>
+  </data>
+  <data name="LegacyImportTitle" xml:space="preserve">
+    <value>Connections from mRemoteNG</value>
+    <comment>Migration assistant: title</comment>
+  </data>
+  <data name="LegacyImportIntro" xml:space="preserve">
+    <value>The classic mRemoteNG has connection files on this computer. Import the connections of a file into the open file (the original stays unchanged), or open the file itself.</value>
+    <comment>Migration assistant</comment>
+  </data>
+  <data name="LegacyImportImport" xml:space="preserve">
+    <value>_Import</value>
+    <comment>Migration assistant: button</comment>
+  </data>
+  <data name="LegacyImportOpen" xml:space="preserve">
+    <value>_Open file</value>
+    <comment>Migration assistant: button</comment>
+  </data>
+  <data name="LegacyImportNotNow" xml:space="preserve">
+    <value>_Not now</value>
+    <comment>Migration assistant: button</comment>
+  </data>
+  <data name="LegacyImportNoneFound" xml:space="preserve">
+    <value>No connection files of the classic mRemoteNG were found on this computer.</value>
+    <comment>Migration assistant</comment>
+  </data>
 </root>
