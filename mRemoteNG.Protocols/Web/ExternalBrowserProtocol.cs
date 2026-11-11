@@ -100,7 +100,7 @@ public sealed class ExternalBrowserProtocol : ProtocolBase, IVisualProtocol
         }
     }
 
-    private static bool LaunchWithShell(string url)
+    internal static bool LaunchWithShell(string url)
     {
         // The shell opens any scheme with its registered handler, so only web URLs may reach it.
         if (!WebUrlBuilder.TryParseWebUrl(url, out var uri))
