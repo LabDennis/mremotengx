@@ -76,7 +76,9 @@ public class ProtocolMappingTests
     {
         var info = new ConnectionInfo
         {
-            Protocol = core, Hostname = "srv", Username = "bob",
+            Protocol = core,
+            Hostname = "srv",
+            Username = "bob",
             TerminalBackend = mRemoteNG.Core.Connection.Protocol.TerminalBackend.WindowsTerminal,
         };
 

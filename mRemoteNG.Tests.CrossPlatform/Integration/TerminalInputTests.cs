@@ -166,7 +166,8 @@ public sealed class TerminalInputTests
             await Task.Delay(50);
 
         var text = view.GetScreenText();
-        text.Should().Contain("$", $"the login shell printed no prompt. Screen:\n[{text}]");
+        // root (as on the CI runner) gets "#" instead of "$"
+        text.Should().ContainAny(new[] { "$", "#" }, $"the login shell printed no prompt. Screen:\n[{text}]");
 
         view.RaiseEvent(new TextInputEventArgs
         {
