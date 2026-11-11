@@ -13,8 +13,8 @@ WinForms app is unchanged and remains Windows-only.
 - **UI:** Avalonia instead of WinForms. Dark, Light and "follow the system" themes.
 - **SSH / SFTP:** handled in-process by SSH.NET; PuTTYNG.exe is not used. Host keys are checked against
   `known_hosts` (see section 5).
-- **RDP:** FreeRDP (`xfreerdp3`/`xfreerdp` on Linux, `wfreerdp` on Windows, FreeRDP from Homebrew on macOS)
-  instead of the Microsoft RDP ActiveX control.
+- **RDP:** Windows uses the Microsoft Remote Desktop control, as the WinForms app does (`wfreerdp` only as a
+  fallback); Linux uses FreeRDP (`xfreerdp3`/`xfreerdp`), macOS FreeRDP from Homebrew.
 - **VNC:** a built-in VNC (RFB) client; no external viewer needed.
 - **Settings:** an XML file instead of the Windows registry.
 
@@ -114,11 +114,11 @@ whole tree or the selected folder, with or without credentials.
 
 | Protocol | Cross-platform implementation |
 |----------|-------------------------------|
-| RDP | FreeRDP, shown inside the tab on Windows and Linux (X11/XWayland); in a separate window on macOS |
+| RDP | Windows: the Microsoft Remote Desktop control inside the tab, as in the WinForms app. Linux (X11/XWayland): FreeRDP inside the tab; macOS: FreeRDP in a separate window |
 | SSH / SFTP | SSH.NET with a built-in xterm-256color terminal; SFTP via **Tools > SFTP File Transfer…** |
 | Telnet, Rlogin, Raw | Built-in terminal |
 | VNC / Apple Remote Desktop | Built-in VNC client |
-| HTTP / HTTPS | Opens in your default web browser |
+| HTTP / HTTPS | Windows: Microsoft Edge WebView2 inside the tab, as in the WinForms app (default browser if the WebView2 runtime is missing). Linux/macOS: opens in your default web browser |
 | PowerShell | `pwsh` (PowerShell 7) |
 | AnyDesk | Launches the AnyDesk client |
 | Ext. App (IntApp) | Runs an External Tool and shows its window in the tab (Windows, and Linux under X11/XWayland) |
@@ -163,7 +163,7 @@ Unlike the WinForms app, a provider error stops the connection instead of silent
 - **VNC:** Raw, RRE, CoRRE, Hextile, Zlib, ZRLE and Tight (including JPEG) work, as do HTTP, SOCKS5 and
   UltraVNC repeater proxies. ZlibHex falls back to Zlib. UltraVNC Ultra encoding, VeNCrypt, chat and file
   transfer are not implemented.
-- **HTTP/HTTPS** pages are not embedded in a tab.
+- **HTTP/HTTPS** pages are embedded in a tab on Windows only; elsewhere they open in the default browser.
 - **IntApp** cannot show the tool inside the tab on macOS or native Wayland; the tool runs in its own window.
 - **Credential providers:** Vault/OpenBao was tested against a real server; Delinea, Passwordstate, 1Password
   and AWS were tested against simulated services only.
