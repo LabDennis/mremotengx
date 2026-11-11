@@ -281,12 +281,10 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
               .Append(FormatForCsv(con.Inheritance.RDPAlertIdleTimeout))
               .Append(FormatForCsv(con.Inheritance.RDPMinutesToIdleTimeout))
               .Append(FormatForCsv(con.Inheritance.SoundQuality))
+              .Append(FormatForCsv(con.Inheritance.UserViaAPI))
               .Append(FormatForCsv(con.Inheritance.RedirectAudioCapture))
               .Append(FormatForCsv(con.Inheritance.RdpVersion))
-              .Append(FormatForCsv(con.Inheritance.UserViaAPI))
-              .Append(FormatForCsv(con.Inheritance.ExternalCredentialProvider))
-              .Append(FormatForCsv(con.Inheritance.Color))
-              .Append(FormatForCsv(con.Inheritance.RDGatewayAccessToken));
+              .Append(FormatForCsv(con.Inheritance.ExternalCredentialProvider));
         }
 
         private string FormatForCsv(object value)

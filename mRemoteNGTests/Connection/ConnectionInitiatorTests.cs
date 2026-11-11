@@ -45,7 +45,7 @@ namespace mRemoteNGTests.Connection
 
             // Assert - poll for message with timeout
             // ConnectionInitiator reports a missing hostname as a warning.
-            var foundMessage = WaitForMessage(MessageClass.WarningMsg, timeoutMs: 1000);
+            var foundMessage = WaitForMessage(MessageClass.WarningMsg, NoHostnameMessage);
             Assert.That(foundMessage, Is.Not.Null, "Expected a warning to be added");
             Assert.That(foundMessage.Text, Is.EqualTo("Cannot open connection: No hostname specified!"));
         }
@@ -66,7 +66,7 @@ namespace mRemoteNGTests.Connection
 
             // Assert - poll for message with timeout
             // ConnectionInitiator reports a missing hostname as a warning.
-            var foundMessage = WaitForMessage(MessageClass.WarningMsg, timeoutMs: 1000);
+            var foundMessage = WaitForMessage(MessageClass.WarningMsg, NoHostnameMessage);
             Assert.That(foundMessage, Is.Not.Null, "Expected a warning to be added");
             Assert.That(foundMessage.Text, Is.EqualTo("Cannot open connection: No hostname specified!"));
         }
