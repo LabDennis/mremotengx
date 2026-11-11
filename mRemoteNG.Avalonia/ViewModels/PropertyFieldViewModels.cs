@@ -148,9 +148,12 @@ public abstract class PropertyFieldViewModel : ReactiveObject
         var changed = IsModified;
         if (Descriptor.IsPluginProperty)
         {
-            if (changed)
-                Descriptor.SetPluginValue(target, _own);
-            return changed;
+            // Compared with the node, not the loaded value: the Config panel applies every edit, so an edit back
+            // to the loaded value must be written too.
+            if (Equals(Descriptor.GetPluginValue(target), _own))
+                return false;
+            Descriptor.SetPluginValue(target, _own);
+            return true;
         }
         ConnectionInheritanceAccessor.SetOwnValue(target, Name, _own);
         // Flags of nodes that cannot inherit (directly under the root) are inactive; keep them as loaded.

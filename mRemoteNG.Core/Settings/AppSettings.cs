@@ -118,7 +118,7 @@ public sealed class AppSettings
     /// <summary>UI font family; empty means the theme's default font.</summary>
     [PersistedSetting("Appearance")] public string FontFamily { get; set; } = string.Empty;
 
-    [PersistedSetting("Appearance")] public double FontSize { get; set; } = 13;
+    [PersistedSetting("Appearance")] public double FontSize { get; set; } = 12; // 9 pt, the WinForms app's size
 
     [PersistedSetting("Appearance")] public bool ShowToolbar { get; set; } = true;
 

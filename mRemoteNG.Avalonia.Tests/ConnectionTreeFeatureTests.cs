@@ -538,6 +538,37 @@ public class ConnectionTreeFeatureTests
         Tree.Root!.Name.Should().Be("My connections");
     }
 
+    [AvaloniaFact]
+    public void ConfigPanel_WritesEachEditToTheSelectedConnection()
+    {
+        var window = TestHost.MainWindow;
+        Tree.CreateNewTree();
+        var node = Tree.AddConnection(new ConnectionInfo { Name = "srv", Hostname = "srv.local" }, Tree.Root!)!;
+        Tree.SelectedNode = node;
+        var config = Tree.Config!;
+        var edits = new List<string>();
+        config.FieldEdited += (_, field) => edits.Add(field.Name);
+        Dispatcher.UIThread.RunJobs();
+
+        window.FindControl<mRemoteNG.Avalonia.Views.ConfigPanel>("ConfigPane")!.IsEffectivelyVisible.Should().BeTrue();
+        edits.Should().BeEmpty("showing a connection must not write anything back to it");
+        var loadedPort = node.Model.Port;
+        config.HostnameField.Value = " srv2.local ";
+        config.Port.IntValue = 2222;
+        node.Model.Hostname.Should().Be("srv2.local");
+        node.Model.Port.Should().Be(2222);
+        Tree.IsDirty.Should().BeTrue();
+
+        config.Port.IntValue = loadedPort;
+        node.Model.Port.Should().Be(loadedPort, "an edit back to the loaded value is written too");
+
+        config.NameField.Value = "";
+        node.Model.Name.Should().Be("srv", "an empty name is not written");
+
+        Tree.SelectedNode = Tree.Nodes[0];
+        Tree.Config.Should().BeNull("the root has no Config properties");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private static ListBoxItem PageItem(Window dialog, string title) =>
